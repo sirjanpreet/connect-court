@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Court Connect</title>
+</head>
+<body>
+    <h1>Edit Profile</h1>
+
+    <!-- Back to Feed Button -->
+    <a href="{{ url_for('feed') }}" style="display: inline-block; margin-bottom: 10px;">&larr; Back to Feed</a>
+
+    <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="{{ user.name }}"><br>
+
+        <label for="phone">Phone:</label>
+        <input type="text" id="phone" name="phone" value="{{ user.phone }}"><br>
+
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" value="{{ user.email }}"><br>
+
+        <label for="bio">Bio:</label>
+        <textarea id="bio" name="bio">{{ user.bio }}</textarea><br>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" value="{{ user.age }}"><br>
+
+        <label for="sports">Sports:</label>
+        <input type="text" id="sports" name="sports" value="{{ user.sports }}"><br>
+
+        <label for="interests">Interests:</label>
+        <input type="text" id="interests" name="interests" value="{{ user.interests }}"><br>
+
+        <label for="location_city">City:</label>
+        <input type="text" id="location_city" name="location_city" value="{{ user.location_city }}"><br>
+
+        <label for="location_state">State:</label>
+        <select id="location_state" name="location_state">
+            <option value="" disabled selected>Select your state</option>
+            {% for code, name in states %}
+                <option value="{{ code }}" {% if user.location_state == code %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="languages">Languages:</label>
+        <input type="text" id="languages" name="languages" value="{{ user.languages }}"><br>
+
+        <label for="gender">Gender:</label>
+        <input type="text" id="gender" name="gender" value="{{ user.gender }}"><br>
+
+        <label for="pronouns">Pronouns:</label>
+        <input type="text" id="pronouns" name="pronouns" value="{{ user.pronouns }}"><br>
+
+        <label for="school_work">School/Work:</label>
+        <input type="text" id="school_work" name="school_work" value="{{ user.school_work }}"><br>
+
+        <label for="profile_picture">Profile Picture:</label>
+        <input type="file" id="profile_picture" name="profile_picture"><br>
+
+        <button type="submit">Save Profile</button>
+    </form>
+
+    {% if user.profile_picture %}
+        <h2>Your Profile Picture</h2>
+        <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="Profile Picture" style="max-width: 150px;">
+    {% endif %}
+</body>
+</html>
