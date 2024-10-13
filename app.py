@@ -1,8 +1,10 @@
+from math import atan2, cos, radians, sin, sqrt
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+import requests
 from werkzeug.utils import secure_filename
 import os
 from flask_migrate import Migrate
-from models import db, User
+from models import db, User, Friendship
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Set up your SQLite DB
@@ -141,16 +143,147 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('signin'))
 
+# Function to get latitude and longitude from city and state using Nominatim
+def get_coordinates(city, state):
+    url = f'https://nominatim.openstreetmap.org/search?city={city}&state={state}&format=json'
+    response = requests.get(url, headers={'User-Agent': 'YourApp'}).json()
+    if response:
+        location = response[0]
+        return float(location['lat']), float(location['lon'])
+    return None, None
+
+# Function to calculate distance using the Haversine formula
+def haversine(lat1, lon1, lat2, lon2):
+    # Radius of the Earth in kilometers
+    R = 6371.0
+
+    lat1_rad = radians(lat1)
+    lon1_rad = radians(lon1)
+    lat2_rad = radians(lat2)
+    lon2_rad = radians(lon2)
+
+    dlon = lon2_rad - lon1_rad
+    dlat = lat2_rad - lat1_rad
+
+    a = sin(dlat / 2)**2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c  # Distance in kilometers
+    return distance
+
 @app.route('/discover')
 def discover():
     if 'username' not in session:
         flash('You must be logged in to view this page.')
         return redirect(url_for('signin'))
 
-    # Get all users from the database
-    users = User.query.filter(User.username != session['username']).all()
+    current_user = User.query.filter_by(username=session['username']).first()  # same
+    current_user_lat, current_user_lng = get_coordinates(current_user.location_city, current_user.location_state)
 
-    return render_template('discover.html', users=users)
+    friendships = {
+        'sent': [f.friend_id for f in current_user.sent_requests if f.status == 'pending'],
+        'received': [f.user_id for f in current_user.received_requests if f.status == 'pending'],
+        'accepted': [f.friend_id for f in current_user.sent_requests if f.status == 'accepted'] + 
+                    [f.user_id for f in current_user.received_requests if f.status == 'accepted']
+    }
+
+    search_query = request.args.get('q', '')
+
+    # Get all users except the logged-in user and those with name "None"
+    users = User.query.filter(
+        User.username != session['username'], 
+        User.name.isnot(None), 
+        User.name != 'None',
+        ~User.id.in_(friendships['accepted'])  # Exclude accepted friends
+    )
+
+    if search_query:
+        search_query = f"%{search_query}%"
+        users = users.filter(
+            (User.name.ilike(search_query)) |
+            (User.bio.ilike(search_query)) |
+            (User.sports.ilike(search_query)) |
+            (User.interests.ilike(search_query)) |
+            (User.location_city.ilike(search_query)) |
+            (User.location_state.ilike(search_query)) |
+            (User.languages.ilike(search_query)) |
+            (User.school_work.ilike(search_query))
+        )
+
+    users = users.all()
+
+    # Calculate the distance for each user and sort by distance
+    user_distances = []
+    for user in users:
+        lat, lng = get_coordinates(user.location_city, user.location_state)
+        if lat is not None and lng is not None:
+            distance = haversine(current_user_lat, current_user_lng, lat, lng)
+            user_distances.append((user, distance))
+        else:
+            user_distances.append((user, float('inf')))  # Max distance if coordinates are unavailable
+
+    # Sort users by distance (closest first)
+    sorted_users = sorted(user_distances, key=lambda x: x[1])
+
+    # Extract just the user objects for rendering
+    sorted_users = [user[0] for user in sorted_users]
+
+    # add friendships here
+
+    return render_template('discover.html', users=sorted_users, friendships=friendships)
+
+@app.route('/send_request/<int:to_user_id>', methods=['POST'])
+def send_request(to_user_id):
+    if 'username' not in session:
+        flash('You must be logged in to send a friend request.')
+        return redirect(url_for('discover'))
+
+    from_user = User.query.filter_by(username=session['username']).first()
+    to_user = User.query.get(to_user_id)
+
+    if from_user.id == to_user_id:
+        flash("You can't send a friend request to yourself!")
+        return redirect(url_for('discover'))
+
+    # Check if a request already exists
+    existing_request = Friendship.query.filter_by(user_id=from_user.id, friend_id=to_user.id).first()
+    if existing_request:
+        flash('Friend request already sent!')
+    else:
+        new_request = Friendship(user_id=from_user.id, friend_id=to_user.id, status='pending')
+        db.session.add(new_request)
+        db.session.commit()
+        flash('Friend request sent!')
+
+    return redirect(url_for('discover'))
+
+# Route to accept a friend request
+@app.route('/accept_request/<int:from_user_id>', methods=['POST'])
+def accept_request(from_user_id):
+    if 'username' not in session:
+        flash('You must be logged in to accept a friend request.')
+        return redirect(url_for('discover'))
+
+    to_user = User.query.filter_by(username=session['username']).first()
+    friend_request = Friendship.query.filter_by(user_id=from_user_id, friend_id=to_user.id, status='pending').first()
+
+    if friend_request:
+        # Update the existing request status to 'accepted'
+        friend_request.status = 'accepted'
+        db.session.commit()
+
+        # Also, create a mutual relationship if it doesn't exist
+        reverse_request = Friendship.query.filter_by(user_id=to_user.id, friend_id=from_user_id).first()
+        if not reverse_request:
+            new_friendship = Friendship(user_id=to_user.id, friend_id=from_user_id, status='accepted')
+            db.session.add(new_friendship)
+            db.session.commit()
+
+        flash('Friend request accepted!')
+    else:
+        flash('No friend request found.')
+
+    return redirect(url_for('discover'))
 
 if __name__ == '__main__':
     app.run(debug=True)
