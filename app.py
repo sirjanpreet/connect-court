@@ -4,7 +4,8 @@ import requests
 from werkzeug.utils import secure_filename
 import os
 from flask_migrate import Migrate
-from models import db, User, Friendship
+from models import db, User, Event, EventSignup, Friendship
+from datetime import datetime, time
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Set up your SQLite DB
@@ -85,14 +86,33 @@ def signin():
     return render_template('signin.html')
 
 # Feed page route (for all users)
-@app.route('/feed')
+@app.route('/feed', methods=['GET', 'POST'])
 def feed():
     if 'username' in session:
         username = session['username']
-        return render_template('feed.html', username=username)
+        user = User.query.filter_by(username=username).first()
+
+        events = Event.query.filter(Event.organizer_id != username).all()
+
+        event_data = []
+        for event in events:
+            current_signups = len(event.signups)
+            max_capacity = event.max_capacity
+            # Check if the user is signed up for the event
+            is_signed_up = any(signup.user_id == user.id for signup in event.signups)
+            event_data.append({
+                'event': event,
+                'current_signups': current_signups,
+                'max_capacity': max_capacity,
+                'is_signed_up': is_signed_up
+            })
+
+        return render_template('feed.html', username=username, events=event_data, user=user)  # Pass user object
+
     else:
         flash('You are not logged in!')
         return redirect(url_for('signin'))
+
 
 # Profile route (view/edit profile)
 @app.route('/profile', methods=['GET', 'POST'])
@@ -170,6 +190,100 @@ def haversine(lat1, lon1, lat2, lon2):
 
     distance = R * c  # Distance in kilometers
     return distance
+
+@app.route('/create_event', methods=['GET', 'POST'])
+def create_event():
+    if 'username' not in session:
+        flash('You need to be logged in to create an event.')
+        return redirect(url_for('signin'))
+        
+    if request.method == 'POST':
+        title = request.form['title']
+        city = request.form['city']  # Get city from form
+        state = request.form['state']  # Get state from form
+        sport = request.form['sport']
+        description = request.form['description']
+        venue = request.form['venue']
+        max_capacity = request.form['max_capacity']
+        date_str = request.form['date']
+        start_time_str = request.form['start_time']
+        end_time_str = request.form['end_time']
+
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        start_time = datetime.strptime(start_time_str, '%H:%M').time()
+        end_time = datetime.strptime(end_time_str, '%H:%M').time()
+        
+        new_event = Event(
+            title=title,
+            city=city,
+            state=state,
+            sport=sport,
+            description=description,
+            venue=venue,
+            max_capacity=max_capacity,
+            date=date,
+            start_time=start_time,
+            end_time=end_time,
+            organizer_id=session['username']
+        )
+
+        
+        db.session.add(new_event)
+        db.session.commit()
+
+        signup_event(event_id=new_event.id)
+
+        flash('Event created successfully!')
+        return redirect(url_for('feed'))
+
+    return render_template('create_event.html')
+
+@app.route('/signup_event/<int:event_id>', methods=['POST'])
+def signup_event(event_id):
+    if 'username' not in session:
+        flash('You need to be logged in to sign up for an event.')
+        return redirect(url_for('signin'))
+    
+    event = Event.query.get(event_id)
+    user = User.query.filter_by(username=session['username']).first()
+    
+    if event and user:
+        existing_signup = EventSignup.query.filter_by(event_id=event.id, user_id=user.id).first()
+        if existing_signup:
+            flash('You are already signed up for this event.')
+            return redirect(url_for('feed'))
+
+    current_signups_count = len(event.signups)
+
+    if current_signups_count < event.max_capacity:
+        signup = EventSignup(event_id=event.id, user_id=user.id)
+        db.session.add(signup)
+        db.session.commit()
+        flash('You have successfully signed up for the event!')
+    else:
+        flash('Sorry, this event is full!')
+    
+    return redirect(url_for('feed'))
+
+@app.route('/unregister_event/<int:event_id>', methods=['POST'])
+def unregister_event(event_id):
+    if 'username' not in session:
+        flash('You need to be logged in to unregister from an event.')
+        return redirect(url_for('signin'))
+    
+    event = Event.query.get(event_id)
+    user = User.query.filter_by(username=session['username']).first()
+    
+    if event and user:
+        signup = EventSignup.query.filter_by(event_id=event.id, user_id=user.id).first()
+        if signup:
+            db.session.delete(signup)
+            db.session.commit()
+            flash('You have successfully unregistered from the event!')
+        else:
+            flash('You are not signed up for this event.')
+    
+    return redirect(url_for('feed'))
 
 @app.route('/discover')
 def discover():
@@ -284,6 +398,7 @@ def accept_request(from_user_id):
         flash('No friend request found.')
 
     return redirect(url_for('discover'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

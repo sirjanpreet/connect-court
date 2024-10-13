@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - Court Connect</title>
+</head>
+<body>
+    <h1>Create a New Event</h1>
+
+    <form method="POST" action="{{ url_for('create_event') }}">
+        <input type="text" name="title" placeholder="Event Title" required>
+        <input type="text" name="city" placeholder="City" required>
+        <input type="text" name="state" placeholder="State" required>
+        <input type="text" name="sport" placeholder="Sport" required>
+        <textarea name="description" placeholder="Description" required></textarea>
+        <input type="text" name="venue" placeholder="Venue" required>
+        <input type="number" name="max_capacity" placeholder="Max Capacity" required>
+        <input type="date" name="date" required>
+        <input type="time" name="start_time" required>
+        <input type="time" name="end_time" required>
+        <button type="submit">Create Event</button>
+    </form>
+
+    <a href="{{ url_for('feed') }}">Back to Feed</a>
+</body>
+</html>
