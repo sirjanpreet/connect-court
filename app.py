@@ -550,5 +550,91 @@ def suggest_message():
 
 
 
+@app.route('/my_events')
+def my_events():
+    if 'username' not in session:
+        flash('You must be logged in to view your events.')
+        return redirect(url_for('signin'))
+
+    user_events = Event.query.filter_by(organizer_id=session['username']).all()
+    
+    events_data = []
+    for event in user_events:
+        current_signups_count = len(event.signups)
+        events_data.append({
+            'event': event,
+            'current_signups': current_signups_count
+        })
+
+    return render_template('my_events.html', events=events_data)
+
+@app.route('/delete_event/<int:event_id>', methods=['POST'])
+def delete_event(event_id):
+    if 'username' not in session:
+        flash('You must be logged in to view this page.')
+        return redirect(url_for('signin'))
+    
+    event = Event.query.get(event_id)
+    if event and event.organizer_id == session['username']:
+        db.session.delete(event)
+        db.session.commit()
+        flash('Event deleted successfully!')
+    else:
+        flash('You cannot delete this event.')
+
+    return redirect(url_for('my_events'))
+
+@app.route('/edit_event/<int:event_id>', methods=['GET', 'POST'])
+def edit_event(event_id):
+    if 'username' not in session:
+        flash('You must be logged in to edit an event.')
+        return redirect(url_for('signin'))
+
+    event = Event.query.get(event_id)
+    if not event or event.organizer_id != session['username']:
+        flash('You cannot edit this event.')
+        return redirect(url_for('my_events'))
+
+    if request.method == 'POST':
+        # Update event fields based on form input
+        event.title = request.form['title']
+        event.description = request.form['description']
+        event.city = request.form['city']
+        event.state = request.form['state']
+        event.venue = request.form['venue']
+        event.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+
+        start_time = datetime.strptime(request.form['start_time'], '%H:%M').time()
+        end_time = datetime.strptime(request.form['end_time'], '%H:%M').time()
+        event.start_time = start_time
+        event.end_time = end_time
+        
+        db.session.commit()
+        flash('Event updated successfully!')
+        return redirect(url_for('my_events'))
+
+    return render_template('edit_event.html', event=event)
+
+@app.route('/registered_events')
+def registered_events():
+    if 'username' not in session:
+        flash('You must be logged in to view your registered events.')
+        return redirect(url_for('signin'))
+
+    username = session['username']
+    user = User.query.filter_by(username=username).first()
+
+    registered_events = Event.query.join(EventSignup).filter(EventSignup.user_id == user.id).all()
+
+    events_data = []
+    for event in registered_events:
+        current_signups_count = len(event.signups)
+        events_data.append({
+            'event': event,
+            'current_signups': current_signups_count
+        })
+    return render_template('registered_events.html', events=events_data, user=user)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
