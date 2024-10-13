@@ -1,22 +1,44 @@
-from math import atan2, cos, radians, sin, sqrt
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-import requests
-from werkzeug.utils import secure_filename
 import os
+from datetime import datetime
+from functools import wraps
+from math import atan2, cos, radians, sin, sqrt
+
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_cors import CORS
+from flask_jwt_extended import (
+    JWTManager, create_access_token, jwt_required, get_jwt_identity
+)
 from flask_migrate import Migrate
+from werkzeug.utils import secure_filename
+
 from models import ChatMessage, db, User, Event, EventSignup, Friendship
-from datetime import datetime, time
+
+import requests
+from dotenv import load_dotenv
 from transformers import pipeline
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Set up your SQLite DB
-app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a strong secret key
-app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Folder for storing profile pictures
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key' 
+app.config['SECRET_KEY'] = 'your_secret_key' 
+app.config['UPLOAD_FOLDER'] = 'static/uploads' 
+
+# Ensure upload folder exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
 db.init_app(app)
-
 migrate = Migrate(app, db)
+CORS(app, supports_credentials=True)
+jwt = JWTManager(app)
 
-HUGGINGFACE_API_TOKEN = "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"
+# Initialize the database tables
+with app.app_context():
+    db.create_all()
+
+HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
 
 generator = pipeline(
     'text-generation',
@@ -24,14 +46,6 @@ generator = pipeline(
     framework='pt',
     pad_token_id=50256  # GPT-2's eos_token_id
 )
-
-# Ensure upload folder exists
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-
-# Initialize the database tables
-with app.app_context():
-    db.create_all()
 
 # States list to populate the dropdown in the profile form
 states = [
@@ -50,10 +64,44 @@ states = [
     ('WI', 'Wisconsin'), ('WY', 'Wyoming')
 ]
 
+### HELPER FUNCTIONS ###
+
+# Function to get latitude and longitude from city and state using Nominatim
+def get_coordinates(city, state):
+    url = f'https://nominatim.openstreetmap.org/search?city={city}&state={state}&format=json'
+    response = requests.get(url, headers={'User-Agent': 'YourApp'}).json()
+    if response:
+        location = response[0]
+        return float(location['lat']), float(location['lon'])
+    return None, None
+
+# Function to calculate distance using the Haversine formula
+def haversine(lat1, lon1, lat2, lon2):
+    # Radius of the Earth in kilometers
+    R = 6371.0
+
+    lat1_rad = radians(lat1)
+    lon1_rad = radians(lon1)
+    lat2_rad = radians(lat2)
+    lon2_rad = radians(lon2)
+
+    dlon = lon2_rad - lon1_rad
+    dlat = lat2_rad - lat1_rad
+
+    a = sin(dlat / 2)**2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c  # Distance in kilometers
+    return distance
+
+### ROUTES ###
+
 # Home route
 @app.route('/')
 def home():
     return render_template('index.html')
+
+## Authentication Routes ##
 
 # Sign Up route
 @app.route('/signup', methods=['GET', 'POST'])
@@ -94,6 +142,13 @@ def signin():
             return redirect(url_for('signin'))
 
     return render_template('signin.html')
+
+# Logout route
+@app.route('/logout')
+def logout():
+    session.pop('username', None)  # Remove username from session
+    flash('You have been logged out.')
+    return redirect(url_for('signin'))
 
 # Feed page route (for all users)
 @app.route('/feed', methods=['GET', 'POST'])
@@ -166,40 +221,6 @@ def profile():
 
     return render_template('profile.html', user=user, states=states)
 
-# Logout route
-@app.route('/logout')
-def logout():
-    session.pop('username', None)  # Remove username from session
-    flash('You have been logged out.')
-    return redirect(url_for('signin'))
-
-# Function to get latitude and longitude from city and state using Nominatim
-def get_coordinates(city, state):
-    url = f'https://nominatim.openstreetmap.org/search?city={city}&state={state}&format=json'
-    response = requests.get(url, headers={'User-Agent': 'YourApp'}).json()
-    if response:
-        location = response[0]
-        return float(location['lat']), float(location['lon'])
-    return None, None
-
-# Function to calculate distance using the Haversine formula
-def haversine(lat1, lon1, lat2, lon2):
-    # Radius of the Earth in kilometers
-    R = 6371.0
-
-    lat1_rad = radians(lat1)
-    lon1_rad = radians(lon1)
-    lat2_rad = radians(lat2)
-    lon2_rad = radians(lon2)
-
-    dlon = lon2_rad - lon1_rad
-    dlat = lat2_rad - lat1_rad
-
-    a = sin(dlat / 2)**2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2)**2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-    distance = R * c  # Distance in kilometers
-    return distance
 
 @app.route('/create_event', methods=['GET', 'POST'])
 def create_event():
