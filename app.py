@@ -17,6 +17,7 @@ from models import ChatMessage, db, User, Event, EventSignup, Friendship
 
 import requests
 from dotenv import load_dotenv
+from datetime import datetime, time
 from transformers import pipeline
 
 app = Flask(__name__)
@@ -26,6 +27,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key' 
 app.config['SECRET_KEY'] = 'your_secret_key' 
 app.config['UPLOAD_FOLDER'] = 'static/uploads' 
+migrate = Migrate(app, db)
+
+HUGGINGFACE_API_TOKEN = "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"
+
+generator = pipeline(
+    'text-generation',
+    model='gpt2',
+    framework='pt',
+    pad_token_id=50256  # GPT-2's eos_token_id
+)
 
 # Ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -43,12 +54,12 @@ with app.app_context():
 HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
-generator = pipeline(
-    'text-generation',
-    model='gpt2',
-    framework='pt',
-    pad_token_id=50256  # GPT-2's eos_token_id
-)
+# generator = pipeline(
+#     'text-generation',
+#     model='gpt2',
+#     framework='pt',
+#     pad_token_id=50256  # GPT-2's eos_token_id
+# )
 
 # States list to populate the dropdown in the profile form
 states = [
@@ -288,6 +299,7 @@ def profile():
         user.interests = request.form.get('interests')
         user.location_city = request.form.get('location_city')
         user.location_state = request.form.get('location_state')
+        user.location = request.form.get('location')
         user.languages = request.form.get('languages')
         user.gender = request.form.get('gender')
         user.pronouns = request.form.get('pronouns')
@@ -319,10 +331,10 @@ def create_event():
         
     if request.method == 'POST':
         title = request.form['title']
-        city = request.form['city']  # Get city from form
-        state = request.form['state']  # Get state from form
         sport = request.form['sport']
         description = request.form['description']
+        city = request.form['city']
+        state = request.form['state']
         venue = request.form['venue']
         max_capacity = request.form['max_capacity']
         date_str = request.form['date']
@@ -335,10 +347,10 @@ def create_event():
         
         new_event = Event(
             title=title,
-            city=city,
-            state=state,
             sport=sport,
             description=description,
+            city=city,
+            state=state,
             venue=venue,
             max_capacity=max_capacity,
             date=date,
@@ -745,11 +757,69 @@ def registered_events():
         })
     return render_template('registered_events.html', events=events_data, user=user)
 
-from flask import render_template
-
-@app.route('/find-events')
+@app.route('/find_events', methods=['GET'])
 def find_events():
-    return render_template('find_events.html', api_key=GOOGLE_API_KEY)
+    if 'username' not in session:
+        flash('You must be logged in to find events.')
+        return redirect(url_for('signin'))
+
+    username = session['username']
+    user = User.query.filter_by(username=username).first()
+    user_lat, user_long = get_coordinates(user.location_city, user.location_state)
+    
+    return render_template('find_events.html', user=user, user_lat=user_lat, user_long=user_long, api_key=GOOGLE_API_KEY)
+
+
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    # Fetch events from the database
+    events = Event.query.all()  # Modify this according to your database setup
+
+    event_list = []
+
+    for event in events:
+        current_signup_count = len(event.signups)
+
+        # Get coordinates using the venue
+        latitude, longitude = get_coordinates_with_venue(event.venue)
+
+        event_list.append({
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'venue': event.venue,
+            'date': event.date.isoformat(),
+            'start_time': event.start_time,
+            'end_time': event.end_time,
+            'current_signup_count': current_signup_count,
+
+            'max_capacity': event.max_capacity,
+            'latitude': latitude,
+            'longitude': longitude,
+        })
+
+    return jsonify(event_list)
+
+
+def get_coordinates_with_venue(venue):
+    apiKey = GOOGLE_API_KEY
+    geocodeUrl = f'https://maps.googleapis.com/maps/api/geocode/json?address={venue}&key={apiKey}'
+    
+    response = requests.get(geocodeUrl)
+    data = response.json()
+    
+    if data['status'] == 'OK':
+        return {
+            'lat': data['results'][0]['geometry']['location']['lat'],
+            'lng': data['results'][0]['geometry']['location']['lng']
+        }
+    else:
+        return {'lat': None, 'lng': None}  # Handle the case when geocoding fails
+
+    
+    return jsonify(event_list)
+
+from flask import render_template
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

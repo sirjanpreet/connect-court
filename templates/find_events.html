@@ -25,6 +25,10 @@
 <body>
     <h1>Find Events Near You</h1>
 
+    <!-- Hidden input fields for user location -->
+    <input type="hidden" id="user_lat" value="{{ user_lat }}">
+    <input type="hidden" id="user_long" value="{{ user_long }}">
+
     <!-- Map Container -->
     <div id="map"></div>
     <div class="event-details" id="event-details"></div>
@@ -33,26 +37,30 @@
         let map;
     
         function initMap() {
-            const userLocation = { lat: {{ user_lat }}, lng: {{ user_long }} };
+            const userLocation = { 
+                lat: parseFloat(document.getElementById('user_lat').value), 
+                lng: parseFloat(document.getElementById('user_long').value) 
+            };
 
             // Create a map centered at the user's location
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 12,
                 center: userLocation,
             });
-
+    
             // Fetch events and place markers
             fetch('/api/events')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(events => {
                     events.forEach(event => {
-                        console.log(`Event: ${event.title}, Lat: ${event.latitude}, Long: ${event.longitude}`);
-                        
-                        // Use the latitude and longitude directly if they exist
-                        const position = { lat: event.latitude, lng: event.longitude };
-                        
+                        const coordinates = { lat: parseFloat(event.latitude), lng: parseFloat(event.longitude) };
                         const marker = new google.maps.Marker({
-                            position: position,
+                            position: coordinates,
                             map: map,
                             title: event.title,
                         });
@@ -67,7 +75,6 @@
                     console.error('Error fetching events:', error);
                 });
         }
-
 
         function showEventDetails(event) {
             const detailsDiv = document.getElementById('event-details');
@@ -108,7 +115,6 @@
                     return null;
                 });
         }
-
         window.onload = initMap;
     </script>
 </body>

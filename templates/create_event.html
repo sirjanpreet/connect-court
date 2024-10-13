@@ -1,27 +1,70 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Event - Court Connect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
+
+    <script>
+        let selectedPlaceName = ""; // Variable to store the name of the selected place
+    
+        function initSearchBox() {
+            const input = document.getElementById('venue');
+            const searchBox = new google.maps.places.SearchBox(input);
+    
+            // Listen for the event fired when the user selects a prediction
+            searchBox.addListener('places_changed', function() {
+                const places = searchBox.getPlaces();
+                if (places.length > 0) {
+                    const place = places[0];
+                    const addressComponents = place.address_components;
+                    let city = '';
+                    let state = '';
+
+                    addressComponents.forEach(component => {
+                        const types = component.types;
+                        if (types.includes('locality')) {
+                            city = component.long_name; // City
+                        }
+                        if (types.includes('administrative_area_level_1')) {
+                            state = component.short_name; // State
+                        }
+                    });
+
+                    // Set city and state as hidden inputs for form submission
+                    document.getElementById('city').value = city;
+                    document.getElementById('state').value = state;
+                }
+            });
+        }
+    
+        window.onload = initSearchBox;
+    </script>
 </head>
 <body>
     <h1>Create a New Event</h1>
 
     <form method="POST" action="{{ url_for('create_event') }}">
         <input type="text" name="title" placeholder="Event Title" required>
-        <input type="text" name="city" placeholder="City" required>
-        <input type="text" name="state" placeholder="State" required>
         <input type="text" name="sport" placeholder="Sport" required>
         <textarea name="description" placeholder="Description" required></textarea>
-        <input type="text" name="venue" placeholder="Venue" required>
+
+        <input type="hidden" id="city" name="city">
+        <input type="hidden" id="state" name="state">
+        <!-- Venue field with autocomplete -->
+        <input id="venue" type="text" name="venue" placeholder="Venue" required>
+        
         <input type="number" name="max_capacity" placeholder="Max Capacity" required>
         <input type="date" name="date" required>
         <input type="time" name="start_time" required>
         <input type="time" name="end_time" required>
-        <button type="submit">Create Event</button>
+        <button type="submit" id="submit-button">Create Event</button>
     </form>
 
     <a href="{{ url_for('feed') }}">Back to Feed</a>
+
 </body>
 </html>
