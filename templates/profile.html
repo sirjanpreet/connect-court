@@ -4,70 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile - Court Connect</title>
+    <!-- Include Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Edit Profile</h1>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="max-w-4xl mx-auto mt-10 bg-white shadow-lg rounded-lg p-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-6">Edit Profile</h1>
 
-    <!-- Back to Feed Button -->
-    <a href="{{ url_for('feed') }}" style="display: inline-block; margin-bottom: 10px;">&larr; Back to Feed</a>
+        <!-- Back to Feed Button -->
+        <a href="{{ url_for('feed') }}" class="text-blue-600 hover:text-blue-800 underline mb-6 inline-block">
+            &larr; Back to Feed
+        </a>
 
-    <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" value="{{ user.name }}"><br>
+        <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data">
+            <div class="grid grid-cols-2 gap-6 mb-4">
+                <!-- Name -->
+                <div class="flex flex-col">
+                    <label for="name" class="text-gray-700 font-medium mb-1">Name</label>
+                    <input type="text" id="name" name="name" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.name }}">
+                </div>
 
-        <label for="phone">Phone:</label>
-        <input type="text" id="phone" name="phone" value="{{ user.phone }}"><br>
+                <!-- Phone -->
+                <div class="flex flex-col">
+                    <label for="phone" class="text-gray-700 font-medium mb-1">Phone</label>
+                    <input type="text" id="phone" name="phone" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.phone }}">
+                </div>
 
-        <label for="email">Email:</label>
-        <input type="text" id="email" name="email" value="{{ user.email }}"><br>
+                <!-- Email -->
+                <div class="flex flex-col">
+                    <label for="email" class="text-gray-700 font-medium mb-1">Email</label>
+                    <input type="email" id="email" name="email" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.email }}">
+                </div>
 
-        <label for="bio">Bio:</label>
-        <textarea id="bio" name="bio">{{ user.bio }}</textarea><br>
+                <!-- Bio -->
+                <div class="flex flex-col col-span-2">
+                    <label for="bio" class="text-gray-700 font-medium mb-1">Bio</label>
+                    <textarea id="bio" name="bio" rows="2" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">{{ user.bio }}</textarea>
+                </div>
 
-        <label for="age">Age:</label>
-        <input type="number" id="age" name="age" value="{{ user.age }}"><br>
+                <!-- Age -->
+                <div class="flex flex-col">
+                    <label for="age" class="text-gray-700 font-medium mb-1">Age</label>
+                    <input type="number" id="age" name="age" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.age }}">
+                </div>
 
-        <label for="sports">Sports:</label>
-        <input type="text" id="sports" name="sports" value="{{ user.sports }}"><br>
+                <!-- Sports -->
+                <div class="flex flex-col">
+                    <label for="sports" class="text-gray-700 font-medium mb-1">Sports</label>
+                    <input type="text" id="sports" name="sports" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.sports }}">
+                </div>
 
-        <label for="interests">Interests:</label>
-        <input type="text" id="interests" name="interests" value="{{ user.interests }}"><br>
+                <!-- Interests -->
+                <div class="flex flex-col">
+                    <label for="interests" class="text-gray-700 font-medium mb-1">Interests</label>
+                    <input type="text" id="interests" name="interests" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.interests }}">
+                </div>
 
-        <label for="location_city">City:</label>
-        <input type="text" id="location_city" name="location_city" value="{{ user.location_city }}"><br>
+                <!-- City -->
+                <div class="flex flex-col">
+                    <label for="location_city" class="text-gray-700 font-medium mb-1">City</label>
+                    <input type="text" id="location_city" name="location_city" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.location_city }}">
+                </div>
 
-        <label for="location_state">State:</label>
-        <select id="location_state" name="location_state">
-            <option value="" disabled selected>Select your state</option>
-            {% for code, name in states %}
-                <option value="{{ code }}" {% if user.location_state == code %}selected{% endif %}>{{ name }}</option>
-            {% endfor %}
-        </select><br>
+                <!-- State -->
+                <div class="flex flex-col">
+                    <label for="location_state" class="text-gray-700 font-medium mb-1">State</label>
+                    <select id="location_state" name="location_state" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="" disabled selected>Select your state</option>
+                        {% for code, name in states %}
+                            <option value="{{ code }}" {% if user.location_state == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-        <label for="languages">Languages:</label>
-        <input type="text" id="languages" name="languages" value="{{ user.languages }}"><br>
+                <!-- Languages -->
+                <div class="flex flex-col">
+                    <label for="languages" class="text-gray-700 font-medium mb-1">Languages</label>
+                    <input type="text" id="languages" name="languages" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.languages }}">
+                </div>
 
-        <label for="gender">Gender:</label>
-        <input type="text" id="gender" name="gender" value="{{ user.gender }}"><br>
+                <!-- Gender -->
+                <div class="flex flex-col">
+                    <label for="gender" class="text-gray-700 font-medium mb-1">Gender</label>
+                    <input type="text" id="gender" name="gender" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.gender }}">
+                </div>
 
-        <label for="pronouns">Pronouns:</label>
-        <input type="text" id="pronouns" name="pronouns" value="{{ user.pronouns }}"><br>
+                <!-- Pronouns -->
+                <div class="flex flex-col">
+                    <label for="pronouns" class="text-gray-700 font-medium mb-1">Pronouns</label>
+                    <input type="text" id="pronouns" name="pronouns" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.pronouns }}">
+                </div>
 
-        <label for="school_work">School/Work:</label>
-        <input type="text" id="school_work" name="school_work" value="{{ user.school_work }}"><br>
+                <!-- School/Work -->
+                <div class="flex flex-col">
+                    <label for="school_work" class="text-gray-700 font-medium mb-1">School/Work</label>
+                    <input type="text" id="school_work" name="school_work" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.school_work }}">
+                </div>
 
-        <label for="profile_picture">Profile Picture:</label>
-        <input type="file" id="profile_picture" name="profile_picture"><br>
+                <!-- Profile Picture -->
+                <div class="flex flex-col col-span-2">
+                    <label for="profile_picture" class="text-gray-700 font-medium mb-1">Profile Picture</label>
+                    <input type="file" id="profile_picture" name="profile_picture" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
 
-        <button type="submit">Save Profile</button>
-    </form>
+                <!-- Current Profile Picture -->
+                {% if user.profile_picture %}
+                    <div class="flex flex-col col-span-2">
+                        <h2 class="text-lg font-medium text-gray-700 mt-4 mb-2">Your Current Profile Picture</h2>
+                        <img src="{{ url_for('static', filename='uploads/' ~ user.profile_picture) }}" alt="Profile Picture" class="max-w-xs rounded-lg shadow-lg">
+                    </div>
+                {% endif %}
+            </div>
 
-    {% if user.profile_picture %}
-        <h2>Your Profile Picture</h2>
-        <!-- Prepend 'uploads/' to the filename -->
-        <img src="{{ url_for('static', filename='uploads/' ~ user.profile_picture) }}" alt="Profile Picture" style="max-width: 150px;">
-    {% endif %}
-
-
+            <div class="text-center">
+                <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out">
+                    Save Profile
+                </button>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

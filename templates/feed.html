@@ -4,51 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feed - Court Connect</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: right;
+        }
+
+        .header a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .header a:hover {
+            text-decoration: underline;
+        }
+
+        .welcome-banner {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .events-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .event-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 15px;
+            width: 100%;
+            max-width: 400px;
+            transition: transform 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: scale(1.03);
+        }
+
+        .event-card h2 {
+            font-size: 1.5rem;
+            color: #007bff;
+        }
+
+        .event-card p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .event-card strong {
+            color: #333;
+        }
+
+        .event-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .event-btn:hover {
+            background-color: #218838;
+        }
+
+        .event-btn-unregister {
+            background-color: #dc3545;
+        }
+
+        .event-btn-unregister:hover {
+            background-color: #c82333;
+        }
+
+        .no-events {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        /* Mobile responsive styling */
+        @media (max-width: 768px) {
+            .event-card {
+                max-width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div style="text-align: right;">
-
+    <div class="header">
         <a href="{{ url_for('profile') }}">Edit Profile</a> |
         <a href="{{ url_for('discover') }}">Discover Users</a> |
-        <a href="{{ url_for('friends') }}">Friends</a> |  <!-- Friends button added -->
+        <a href="{{ url_for('friends') }}">Friends</a> |
         <a href="{{ url_for('logout') }}">Sign Out</a>
     </div>
-    
-    <h1>Welcome to your feed, {{ username }}!</h1>
-    <p>You are now signed in.</p>
 
-    <h2>Events</h2>
-    <a href="{{ url_for('create_event') }}">Create Event</a>
-    <a href="{{ url_for('my_events') }}">My Events</a>
-    <a href="{{ url_for('registered_events') }}">Registered Events</a>
-    <div id="events-container">
-        {% for event_data in events %}
-            <div class="event-card">
-                <h2>{{ event_data.event.title }}</h2>
-                <p><strong>Organized by:</strong> {{ event_data.event.organizer_id }}</p>
-                <p><strong>Sport:</strong> {{ event_data.event.sport }}</p>
-                <p><strong>Date:</strong> {{ event_data.event.date }}</p>
-                <p><strong>Time:</strong> {{ event_data.event.start_time }} - {{ event_data.event.end_time }}</p>
-                <p><strong>Location:</strong> {{ event_data.event.city }}, {{ event_data.event.state }}</p>
-                <p><strong>Description:</strong> {{ event_data.event.description }}</p>
-                <p><strong>Venue:</strong> {{ event_data.event.venue }}</p>
-                <p><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.max_capacity }}</p>
-                
-                {% if event_data.is_signed_up %}
-                    <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="POST">
-                        <button type="submit">Unregister</button>
-                    </form>
-                {% else %}
-                    <form action="{{ url_for('signup_event', event_id=event_data.event.id) }}" method="POST">
-                        <button type="submit">Sign Up</button>
-                    </form>
-                {% endif %}
-            </div>
-        {% else %}
-            <p>No events found.</p>
-        {% endfor %}
+    <div class="welcome-banner">
+        <h1>Welcome to your feed, {{ username }}!</h1>
+        <p>You are now signed in.</p>
     </div>
 
+    <div class="text-center mb-4">
+        <a href="{{ url_for('create_event') }}" class="btn btn-primary mx-2">Create Event</a>
+        <a href="{{ url_for('my_events') }}" class="btn btn-secondary mx-2">My Events</a>
+        <a href="{{ url_for('registered_events') }}" class="btn btn-info mx-2">Registered Events</a>
+    </div>
+
+    <div class="events-wrapper">
+        <div class="row justify-content-center">
+            {% for event_data in events %}
+                <div class="col-md-4">
+                    <div class="event-card">
+                        <h2>{{ event_data.event.title }}</h2>
+                        <p><strong>Organized by:</strong> {{ event_data.event.organizer_id }}</p>
+                        <p><strong>Sport:</strong> {{ event_data.event.sport }}</p>
+                        <p><strong>Date:</strong> {{ event_data.event.date }}</p>
+                        <p><strong>Time:</strong> {{ event_data.event.start_time }} - {{ event_data.event.end_time }}</p>
+                        <p><strong>Location:</strong> {{ event_data.event.city }}, {{ event_data.event.state }}</p>
+                        <p><strong>Description:</strong> {{ event_data.event.description }}</p>
+                        <p><strong>Venue:</strong> {{ event_data.event.venue }}</p>
+                        <p><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.max_capacity }}</p>
+                        
+                        {% if event_data.is_signed_up %}
+                            <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="POST">
+                                <button type="submit" class="event-btn event-btn-unregister">Unregister</button>
+                            </form>
+                        {% else %}
+                            <form action="{{ url_for('signup_event', event_id=event_data.event.id) }}" method="POST">
+                                <button type="submit" class="event-btn">Sign Up</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p class="no-events">No events found.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

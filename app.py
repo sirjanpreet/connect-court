@@ -752,4 +752,4 @@ def find_events():
     return render_template('find_events.html', api_key=GOOGLE_API_KEY)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
