@@ -10,7 +10,8 @@
     <div style="text-align: right;">
 
         <a href="{{ url_for('profile') }}">Edit Profile</a> |
-        <a href="{{ url_for('discover') }}">Discover Users</a> <!-- Renamed link -->
+        <a href="{{ url_for('discover') }}">Discover Users</a> |
+        <a href="{{ url_for('friends') }}">Friends</a> |  <!-- Friends button added -->
         <a href="{{ url_for('logout') }}">Sign Out</a>
     </div>
     
@@ -49,6 +50,5 @@
         {% endfor %}
     </div>
 
-    
 </body>
 </html>

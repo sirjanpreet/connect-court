@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -19,7 +20,16 @@ class User(db.Model):
     gender = db.Column(db.String(50), nullable=True)
     pronouns = db.Column(db.String(50), nullable=True)
     school_work = db.Column(db.String(150), nullable=True)
-    profile_picture = db.Column(db.String(250), nullable=True)  # To store image file path
+    profile_picture = db.Column(db.String(250), nullable=True)
+
+class Friendship(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    friend_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='pending')  # 'pending' or 'accepted'
+
+    user = db.relationship('User', foreign_keys=[user_id], backref='sent_requests')
+    friend = db.relationship('User', foreign_keys=[friend_id], backref='received_requests')
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -52,3 +62,13 @@ class EventSignup(db.Model):
 
     def __repr__(self):
         return f'<Signup {self.user.username} for {self.event.title}>'
+
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sender = db.relationship('User', foreign_keys=[sender_id])
+    recipient = db.relationship('User', foreign_keys=[recipient_id])

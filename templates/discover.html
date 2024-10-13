@@ -38,23 +38,38 @@
     <!-- Back to Feed Button -->
     <a href="{{ url_for('feed') }}" style="display: inline-block; margin-bottom: 10px;">&larr; Back to Feed</a>
 
+    <!-- Search Form with Reset Button -->
+    <form action="{{ url_for('discover') }}" method="GET" style="margin-bottom: 20px;">
+        <input type="text" name="q" placeholder="Search..." value="{{ request.args.get('q', '') }}">
+        <button type="submit">Search</button>
+        <a href="{{ url_for('discover') }}" style="margin-left: 10px;">
+            <button type="button">Reset</button>
+        </a>
+    </form>
+
     <h1>Discover Users</h1>
     <div class="container">
         {% for user in users %}
             <div class="card">
-                {% if user.profile_picture %}
-                    <img src="{{ url_for('static', filename='uploads/' ~ user.profile_picture) }}" alt="Profile Picture">
-                {% else %}
-                    <img src="{{ url_for('static', filename='uploads/default.jpg') }}" alt="Default Profile Picture">
-                {% endif %}
                 <h2>{{ user.name }}</h2>
-                <p><strong>Age:</strong> {{ user.age }}</p>
+                <p><strong>Location:</strong> {{ user.location_city }}, {{ user.location_state }}</p>
                 <p><strong>Bio:</strong> {{ user.bio }}</p>
                 <p><strong>Sports:</strong> {{ user.sports }}</p>
                 <p><strong>Interests:</strong> {{ user.interests }}</p>
-                <p><strong>Location:</strong> {{ user.location_city }}, {{ user.location_state }}</p>
-                <p><strong>Languages:</strong> {{ user.languages }}</p>
-                <p><strong>School/Work:</strong> {{ user.school_work }}</p>
+
+                {% if user.id in friendships['accepted'] %}
+                    <p>Your Friend</p>
+                {% elif user.id in friendships['sent'] %}
+                    <p>Friend Request Sent</p>
+                {% elif user.id in friendships['received'] %}
+                    <form method="POST" action="{{ url_for('accept_request', from_user_id=user.id) }}">
+                        <button type="submit">Accept Friend Request</button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="{{ url_for('send_request', to_user_id=user.id) }}">
+                        <button type="submit">Add Friend</button>
+                    </form>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
