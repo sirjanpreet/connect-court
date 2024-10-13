@@ -2,14 +2,14 @@ import os
 from datetime import datetime
 from functools import wraps
 import numpy as np
-from sklearn.neighbors import KNeighborsRegressor
+# from sklearn.neighbors import KNeighborsRegressor
 from math import atan2, cos, radians, sin, sqrt
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from flask_cors import CORS
-from flask_jwt_extended import (
-    JWTManager, create_access_token, jwt_required, get_jwt_identity
-)
+# from flask_cors import CORS
+# from flask_jwt_extended import (
+#     JWTManager, create_access_token, jwt_required, get_jwt_identity
+# )
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 
@@ -17,7 +17,7 @@ from models import ChatMessage, db, User, Event, EventSignup, Friendship
 
 import requests
 from dotenv import load_dotenv
-from transformers import pipeline
+# from transformers import pipeline
 
 app = Flask(__name__)
 
@@ -33,8 +33,8 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 db.init_app(app)
 migrate = Migrate(app, db)
-CORS(app, supports_credentials=True)
-jwt = JWTManager(app)
+# CORS(app, supports_credentials=True)
+# jwt = JWTManager(app)
 
 # Initialize the database tables
 with app.app_context():
@@ -42,12 +42,12 @@ with app.app_context():
 
 HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
 
-generator = pipeline(
-    'text-generation',
-    model='gpt2',
-    framework='pt',
-    pad_token_id=50256  # GPT-2's eos_token_id
-)
+# generator = pipeline(
+#     'text-generation',
+#     model='gpt2',
+#     framework='pt',
+#     pad_token_id=50256  # GPT-2's eos_token_id
+# )
 
 # States list to populate the dropdown in the profile form
 states = [
@@ -535,127 +535,127 @@ def friends():
     return render_template('friends.html', friends=friends)
 
 
-@app.route('/chat', methods=['GET', 'POST'])
-def chat():
-    if 'username' not in session:
-        flash('You must be logged in to view this page.')
-        return redirect(url_for('signin'))
+# @app.route('/chat', methods=['GET', 'POST'])
+# def chat():
+#     if 'username' not in session:
+#         flash('You must be logged in to view this page.')
+#         return redirect(url_for('signin'))
 
-    current_user = User.query.filter_by(username=session['username']).first()
+#     current_user = User.query.filter_by(username=session['username']).first()
     
-    # Get the friend ID from the session
-    friend_id = session.get('friend_id')
-    if not friend_id:
-        flash('No chat initiated. Please start a chat from the Friends page.')
-        return redirect(url_for('friends'))
+#     # Get the friend ID from the session
+#     friend_id = session.get('friend_id')
+#     if not friend_id:
+#         flash('No chat initiated. Please start a chat from the Friends page.')
+#         return redirect(url_for('friends'))
 
-    friend = User.query.get(friend_id)
+#     friend = User.query.get(friend_id)
 
-    if request.method == 'POST':
-        message_text = request.form.get('message')
-        if message_text:
-            new_message = ChatMessage(sender_id=current_user.id, recipient_id=friend_id, message=message_text)
-            db.session.add(new_message)
-            db.session.commit()
-            flash(f'Message sent to {friend.name}')
+#     if request.method == 'POST':
+#         message_text = request.form.get('message')
+#         if message_text:
+#             new_message = ChatMessage(sender_id=current_user.id, recipient_id=friend_id, message=message_text)
+#             db.session.add(new_message)
+#             db.session.commit()
+#             flash(f'Message sent to {friend.name}')
     
-    # Retrieve the chat history between the current user and the friend
-    chat_history = ChatMessage.query.filter(
-        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
-        ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
-    ).order_by(ChatMessage.timestamp).all()
+#     # Retrieve the chat history between the current user and the friend
+#     chat_history = ChatMessage.query.filter(
+#         ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
+#         ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
+#     ).order_by(ChatMessage.timestamp).all()
 
-    return render_template('chat.html', friend=friend, chat_history=chat_history, current_user=current_user)
+#     return render_template('chat.html', friend=friend, chat_history=chat_history, current_user=current_user)
 
 
-@app.route('/start_chat', methods=['POST'])
-def start_chat():
-    if 'username' not in session:
-        flash('You must be logged in to start a chat.')
-        return redirect(url_for('signin'))
+# @app.route('/start_chat', methods=['POST'])
+# def start_chat():
+#     if 'username' not in session:
+#         flash('You must be logged in to start a chat.')
+#         return redirect(url_for('signin'))
 
-    friend_id = request.form.get('friend_id')
+#     friend_id = request.form.get('friend_id')
     
-    if friend_id:
-        session['friend_id'] = friend_id  # Store the friend's ID in the session
-        return redirect(url_for('chat'))  # Redirect to the /chat route
+#     if friend_id:
+#         session['friend_id'] = friend_id  # Store the friend's ID in the session
+#         return redirect(url_for('chat'))  # Redirect to the /chat route
     
-    flash('Could not start chat. Please try again.')
-    return redirect(url_for('friends'))
+#     flash('Could not start chat. Please try again.')
+#     return redirect(url_for('friends'))
 
-@app.route('/suggest_message', methods=['POST'])
-def suggest_message():
-    if 'username' not in session:
-        return jsonify({"error": "You must be logged in to get message suggestions."}), 403
+# @app.route('/suggest_message', methods=['POST'])
+# def suggest_message():
+#     if 'username' not in session:
+#         return jsonify({"error": "You must be logged in to get message suggestions."}), 403
 
-    # Get the current logged-in user and the friend they are chatting with
-    current_user = User.query.filter_by(username=session['username']).first()
-    friend_id = session.get('friend_id')
-    if not friend_id:
-        return jsonify({"error": "No friend selected."}), 400
+#     # Get the current logged-in user and the friend they are chatting with
+#     current_user = User.query.filter_by(username=session['username']).first()
+#     friend_id = session.get('friend_id')
+#     if not friend_id:
+#         return jsonify({"error": "No friend selected."}), 400
 
-    friend = User.query.get(friend_id)
+#     friend = User.query.get(friend_id)
 
-    if not friend:
-        return jsonify({"error": "Friend not found."}), 404
+#     if not friend:
+#         return jsonify({"error": "Friend not found."}), 404
 
-    # Fetch the last 10 messages between the two users
-    chat_history = ChatMessage.query.filter(
-        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
-        ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
-    ).order_by(ChatMessage.timestamp.desc()).limit(10).all()
+#     # Fetch the last 10 messages between the two users
+#     chat_history = ChatMessage.query.filter(
+#         ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
+#         ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
+#     ).order_by(ChatMessage.timestamp.desc()).limit(10).all()
 
-    # Reverse chat history to have the oldest message first
-    chat_history = chat_history[::-1]
+#     # Reverse chat history to have the oldest message first
+#     chat_history = chat_history[::-1]
 
-    # Format the chat history for the prompt
-    chat_history_text = "\n".join(
-        [f"{msg.sender.name}: {msg.message}" for msg in chat_history]
-    )
+#     # Format the chat history for the prompt
+#     chat_history_text = "\n".join(
+#         [f"{msg.sender.name}: {msg.message}" for msg in chat_history]
+#     )
 
-    # Construct the prompt with user profiles and chat history
-    prompt = f"""
-    The following is a conversation between {current_user.name} and {friend.name}.
-    {current_user.name}'s Profile:
-    - Sports: {current_user.sports or 'N/A'}
-    - Bio: {current_user.bio or 'N/A'}
-    - Interests: {current_user.interests or 'N/A'}
-    - Location: {current_user.location_city}, {current_user.location_state or 'N/A'}
-    - Languages: {current_user.languages or 'N/A'}
-    - School/Work: {current_user.school_work or 'N/A'}
+#     # Construct the prompt with user profiles and chat history
+#     prompt = f"""
+#     The following is a conversation between {current_user.name} and {friend.name}.
+#     {current_user.name}'s Profile:
+#     - Sports: {current_user.sports or 'N/A'}
+#     - Bio: {current_user.bio or 'N/A'}
+#     - Interests: {current_user.interests or 'N/A'}
+#     - Location: {current_user.location_city}, {current_user.location_state or 'N/A'}
+#     - Languages: {current_user.languages or 'N/A'}
+#     - School/Work: {current_user.school_work or 'N/A'}
 
-    {friend.name}'s Profile:
-    - Sports: {friend.sports or 'N/A'}
-    - Bio: {friend.bio or 'N/A'}
-    - Interests: {friend.interests or 'N/A'}
-    - Location: {friend.location_city}, {friend.location_state or 'N/A'}
-    - Languages: {friend.languages or 'N/A'}
-    - School/Work: {friend.school_work or 'N/A'}
+#     {friend.name}'s Profile:
+#     - Sports: {friend.sports or 'N/A'}
+#     - Bio: {friend.bio or 'N/A'}
+#     - Interests: {friend.interests or 'N/A'}
+#     - Location: {friend.location_city}, {friend.location_state or 'N/A'}
+#     - Languages: {friend.languages or 'N/A'}
+#     - School/Work: {friend.school_work or 'N/A'}
 
-    Based on the above profiles and the chat history below, generate a relevant and engaging message for {current_user.name} to send to {friend.name} about meeting up to play some sports.
+#     Based on the above profiles and the chat history below, generate a relevant and engaging message for {current_user.name} to send to {friend.name} about meeting up to play some sports.
 
-    Chat History:
-    {chat_history_text}
+#     Chat History:
+#     {chat_history_text}
 
-    {current_user.name}:
-    """
+#     {current_user.name}:
+#     """
 
-    try:
-        # Generate a message using GPT-2 with max_new_tokens and return only the generated text
-        result = generator(
-            prompt,
-            max_new_tokens=50,       # Number of tokens to generate
-            return_full_text=False,  # Return only the generated text
-            truncation=True
-        )
-        suggestion = result[0]['generated_text'].strip()
+#     try:
+#         # Generate a message using GPT-2 with max_new_tokens and return only the generated text
+#         result = generator(
+#             prompt,
+#             max_new_tokens=50,       # Number of tokens to generate
+#             return_full_text=False,  # Return only the generated text
+#             truncation=True
+#         )
+#         suggestion = result[0]['generated_text'].strip()
 
-        return jsonify({"suggestion": suggestion}), 200
+#         return jsonify({"suggestion": suggestion}), 200
 
-    except Exception as e:
-        # Log the exception (optional)
-        app.logger.error(f"Error generating message: {e}")
-        return jsonify({"error": "Failed to generate a suggestion."}), 500
+#     except Exception as e:
+#         # Log the exception (optional)
+#         app.logger.error(f"Error generating message: {e}")
+#         return jsonify({"error": "Failed to generate a suggestion."}), 500
 
 
 
@@ -743,6 +743,67 @@ def registered_events():
             'current_signups': current_signups_count
         })
     return render_template('registered_events.html', events=events_data, user=user)
+
+@app.route('/find_events', methods=['GET'])
+def find_events():
+    if 'username' not in session:
+        flash('You must be logged in to find events.')
+        return redirect(url_for('signin'))
+
+    username = session['username']
+    user = User.query.filter_by(username=username).first()
+    user_lat, user_long = get_coordinates(user.location_city, user.location_state)
+    
+    return render_template('find_events.html', user=user, user_lat=user_lat, user_long=user_long)
+
+
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    # Fetch events from the database
+    events = Event.query.all()
+    event_list = []
+
+    for event in events:
+        current_signup_count = len(event.signups)
+
+        # Get coordinates using the venue
+        latitude, longitude = get_coordinates_with_venue(event.venue)
+
+        event_list.append({
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'venue': event.venue,
+            'date': event.date.isoformat(),
+            'start_time': event.start_time,
+            'end_time': event.end_time,
+            'current_signup_count': current_signup_count,
+            'max_capacity': event.max_capacity,
+            'latitude': latitude,
+            'longitude': longitude,
+        })
+
+    return jsonify(event_list)
+
+
+def get_coordinates_with_venue(venue):
+    apiKey = 'AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg'
+    print("test1")
+    geocodeUrl = f'https://maps.googleapis.com/maps/api/geocode/json?address={venue}&key={apiKey}'
+    print("test2")
+    
+    response = requests.get(geocodeUrl)
+    print("test3")
+    data = response.json()
+    print("test4")
+    
+    if data['status'] == 'OK':
+        return {
+            'lat': data['results'][0]['geometry']['location']['lat'],
+            'lng': data['results'][0]['geometry']['location']['lng']
+        }
+    else:
+        return {'lat': None, 'lng': None}  # Handle the case when geocoding fails
 
 
 if __name__ == '__main__':
