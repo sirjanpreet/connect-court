@@ -6,7 +6,6 @@
     <title>Chat with {{ friend.name }} - Court Connect</title>
 
     <style>
-        /* [Your existing CSS styles here] */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
@@ -104,6 +103,33 @@
             var chatHistory = document.getElementById('chat-history');
             chatHistory.scrollTop = chatHistory.scrollHeight;  // Scroll to the bottom on page load
         };
+
+        // Function to request a suggested message
+        function suggestMessage() {
+            // Get the selected response type
+            let responseType = document.querySelector('input[name="response_type"]:checked').value;
+
+            fetch('{{ url_for("suggest_message") }}', {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: responseType  // Send the selected response type
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.suggestion) {
+                    document.getElementById('message-input-text').value = data.suggestion;
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        }
     </script>
 </head>
 <body>
@@ -131,10 +157,20 @@
         {% endfor %}
     </div>
 
+    <!-- Chat input and suggestion area -->
     <form action="{{ url_for('chat') }}" method="POST" id="message-input">
-        <textarea name="message" rows="2" placeholder="Type your message here..."></textarea>
+        <textarea id="message-input-text" name="message" rows="2" placeholder="Type your message here..."></textarea>
         <button type="submit">Send</button>
     </form>
+
+    <!-- Add radio buttons to choose between friendly or intelligent response -->
+    <div>
+        <label><input type="radio" name="response_type" value="friendly" checked> Friendly Response</label>
+        <label><input type="radio" name="response_type" value="intelligent"> Intelligent Response</label>
+    </div>
+
+    <!-- Button to trigger message suggestion -->
+    <button type="button" onclick="suggestMessage()">Suggest a Message</button>
 </div>
 
 </body>

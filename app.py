@@ -1,11 +1,12 @@
 from math import atan2, cos, radians, sin, sqrt
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import requests
 from werkzeug.utils import secure_filename
 import os
 from flask_migrate import Migrate
 from models import ChatMessage, db, User, Event, EventSignup, Friendship
 from datetime import datetime, time
+from transformers import pipeline
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Set up your SQLite DB
@@ -14,6 +15,10 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'  # Folder for storing profile pic
 db.init_app(app)
 
 migrate = Migrate(app, db)
+
+HUGGINGFACE_API_TOKEN = "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"
+
+generator = pipeline('text-generation', model='gpt2', framework = 'pt')
 
 # Ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -463,6 +468,60 @@ def start_chat():
     
     flash('Could not start chat. Please try again.')
     return redirect(url_for('friends'))
+
+@app.route('/suggest_message', methods=['POST'])
+def suggest_message():
+    if 'username' not in session:
+        return jsonify({"error": "You must be logged in to get message suggestions."}), 403
+
+    # Get the current logged-in user and the friend they are chatting with
+    current_user = User.query.filter_by(username=session['username']).first()
+    friend_id = session.get('friend_id')
+    if not friend_id:
+        return jsonify({"error": "No friend selected."}), 400
+
+    friend = User.query.get(friend_id)
+
+    # Get the response type from the request (default to 'friendly')
+    response_type = request.json.get('type', 'friendly')
+
+    # Friendly response: Based on user profiles and interests
+    if response_type == 'friendly':
+        prompt = f"""
+        Suggest a friendly message for {current_user.name} to send to {friend.name}. 
+        {current_user.name} is interested in {current_user.sports}, and {friend.name} enjoys {friend.sports}.
+        Be friendly and suggest a sports-related topic for conversation.
+        """
+        # Generate a message using GPT-2, with truncation enabled
+        result = generator(prompt, max_length=500, truncation=True)
+        suggestion = result[0]['generated_text'].strip()
+
+    # Intelligent response: Based on recent chat history
+    elif response_type == 'intelligent':
+        # Fetch the last 10 messages between the two users
+        chat_history = ChatMessage.query.filter(
+            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
+            ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
+        ).order_by(ChatMessage.timestamp.desc()).limit(10).all()
+
+        # Reverse chat history to have the oldest message first
+        chat_history = chat_history[::-1]
+
+        # Format the chat history for the prompt
+        chat_history_text = "\n".join(
+            [f"{msg.sender.name}: {msg.message}" for msg in chat_history]
+        )
+
+        prompt = f"""
+        The following is a conversation between {current_user.name} and {friend.name}.
+        Generate an intelligent response for {current_user.name} based on the chat history:
+        {chat_history_text}
+        """
+        # Generate an intelligent response using GPT-2, with truncation enabled
+        result = generator(prompt, max_length=500, truncation=True)
+        suggestion = result[0]['generated_text'].strip()
+
+    return jsonify({"suggestion": suggestion}), 200
 
 
 if __name__ == '__main__':
