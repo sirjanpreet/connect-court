@@ -7,10 +7,13 @@
 </head>
 <body>
     <div style="text-align: right;">
-        <a href="{{ url_for('profile') }}">Edit Profile</a>
+        <a href="{{ url_for('profile') }}">Edit Profile</a> |
+        <a href="{{ url_for('discover') }}">Discover Users</a> <!-- Renamed link -->
+        <a href="{{ url_for('logout') }}">Sign Out</a>
     </div>
+    
     <h1>Welcome to your feed, {{ username }}!</h1>
     <p>You are now signed in.</p>
-    <a href="{{ url_for('logout') }}">Log out</a>
+    
 </body>
 </html>
