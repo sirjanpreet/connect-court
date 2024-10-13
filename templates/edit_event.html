@@ -4,15 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Event</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
+
+    <script>
+        let selectedPlaceName = ""; // Variable to store the name of the selected place
+    
+        function initSearchBox() {
+            const input = document.getElementById('venue');
+            const searchBox = new google.maps.places.SearchBox(input);
+    
+            // Listen for the event fired when the user selects a prediction
+            searchBox.addListener('places_changed', function() {
+                const places = searchBox.getPlaces();
+                if (places.length > 0) {
+                    const place = places[0];
+                    const addressComponents = place.address_components;
+                    let city = '';
+                    let state = '';
+
+                    addressComponents.forEach(component => {
+                        const types = component.types;
+                        if (types.includes('locality')) {
+                            city = component.long_name; // City
+                        }
+                        if (types.includes('administrative_area_level_1')) {
+                            state = component.short_name; // State
+                        }
+                    });
+
+                    // Set city and state as hidden inputs for form submission
+                    document.getElementById('city').value = city;
+                    document.getElementById('state').value = state;
+                }
+            });
+        }
+    
+        window.onload = initSearchBox;
+    </script>
 </head>
 <body>
     <h1>Edit Event: {{ event.title }}</h1>
     <form method="post">
         <input type="text" name="title" value="{{ event.title }}" required>
         <textarea name="description">{{ event.description }}</textarea>
-        <input type="text" name="city" value="{{ event.city }}" required>
-        <input type="text" name="state" value="{{ event.state }}" required>
-        <input type="text" name="venue" value="{{ event.venue }}" required>
+        <input type="hidden" id="city" name="city">
+        <input type="hidden" id="state" name="state">
+        <input type="text" id="venue" name="venue" value="{{ event.venue }}" required>
         <input type="date" name="date" value="{{ event.date }}" required>
         <input type="time" name="start_time" value="{{ event.start_time.strftime('%H:%M') }}" required>
         <input type="time" name="end_time" value="{{ event.end_time.strftime('%H:%M') }}" required>

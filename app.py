@@ -17,6 +17,7 @@ from models import ChatMessage, db, User, Event, EventSignup, Friendship
 
 import requests
 from dotenv import load_dotenv
+from datetime import datetime, time
 # from transformers import pipeline
 
 app = Flask(__name__)
@@ -26,6 +27,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key' 
 app.config['SECRET_KEY'] = 'your_secret_key' 
 app.config['UPLOAD_FOLDER'] = 'static/uploads' 
+migrate = Migrate(app, db)
+
+HUGGINGFACE_API_TOKEN = "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"
+
+# generator = pipeline(
+#     'text-generation',
+#     model='gpt2',
+#     framework='pt',
+#     pad_token_id=50256  # GPT-2's eos_token_id
+# )
 
 # Ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -287,6 +298,7 @@ def profile():
         user.interests = request.form.get('interests')
         user.location_city = request.form.get('location_city')
         user.location_state = request.form.get('location_state')
+        user.location = request.form.get('location')
         user.languages = request.form.get('languages')
         user.gender = request.form.get('gender')
         user.pronouns = request.form.get('pronouns')
@@ -318,10 +330,10 @@ def create_event():
         
     if request.method == 'POST':
         title = request.form['title']
-        city = request.form['city']  # Get city from form
-        state = request.form['state']  # Get state from form
         sport = request.form['sport']
         description = request.form['description']
+        city = request.form['city']
+        state = request.form['state']
         venue = request.form['venue']
         max_capacity = request.form['max_capacity']
         date_str = request.form['date']
@@ -334,10 +346,10 @@ def create_event():
         
         new_event = Event(
             title=title,
-            city=city,
-            state=state,
             sport=sport,
             description=description,
+            city=city,
+            state=state,
             venue=venue,
             max_capacity=max_capacity,
             date=date,
@@ -760,7 +772,8 @@ def find_events():
 @app.route('/api/events', methods=['GET'])
 def get_events():
     # Fetch events from the database
-    events = Event.query.all()
+    events = Event.query.all()  # Modify this according to your database setup
+
     event_list = []
 
     for event in events:
@@ -778,6 +791,7 @@ def get_events():
             'start_time': event.start_time,
             'end_time': event.end_time,
             'current_signup_count': current_signup_count,
+
             'max_capacity': event.max_capacity,
             'latitude': latitude,
             'longitude': longitude,
@@ -804,6 +818,9 @@ def get_coordinates_with_venue(venue):
         }
     else:
         return {'lat': None, 'lng': None}  # Handle the case when geocoding fails
+
+    
+    return jsonify(event_list)
 
 
 if __name__ == '__main__':

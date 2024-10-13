@@ -4,6 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile - Court Connect</title>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
+    <script>
+        let searchBox
+
+        function initSearchBox() {
+            const input = document.getElementById('location');
+            searchBox = new google.maps.places.SearchBox(input);
+
+            // Listener for when the user selects a prediction
+            searchBox.addListener('places_changed', function() {
+                const places = searchBox.getPlaces();
+                if (places.length > 0) {
+                    const place = places[0];
+                    const addressComponents = place.address_components;
+                    let city = '';
+                    let state = '';
+
+                    addressComponents.forEach(component => {
+                        const types = component.types;
+                        if (types.includes('locality')) {
+                            city = component.long_name; // City
+                        }
+                        if (types.includes('administrative_area_level_1')) {
+                            state = component.short_name; // State
+                        }
+                    });
+
+                    // Set city and state as hidden inputs for form submission
+                    document.getElementById('location_city').value = city;
+                    document.getElementById('location_state').value = state;
+                }
+            });
+        }
+
+        window.onload = initSearchBox;
+    </script>
 </head>
 <body>
     <h1>Edit Profile</h1>
@@ -33,16 +70,20 @@
         <label for="interests">Interests:</label>
         <input type="text" id="interests" name="interests" value="{{ user.interests }}"><br>
 
-        <label for="location_city">City:</label>
-        <input type="text" id="location_city" name="location_city" value="{{ user.location_city }}"><br>
+        <!-- <label for="location_city">City:</label> -->
+        <input type="hidden" id="location_city" name="location_city" value="{{ user.location_city }}">
 
-        <label for="location_state">State:</label>
-        <select id="location_state" name="location_state">
+        <!-- <label for="location_state">State:</label> -->
+        <input type="hidden" id="location_state" name="location_state">
+        <!-- <select id="location_state" name="location_state">
             <option value="" disabled selected>Select your state</option>
             {% for code, name in states %}
                 <option value="{{ code }}" {% if user.location_state == code %}selected{% endif %}>{{ name }}</option>
             {% endfor %}
-        </select><br>
+        </select><br> -->
+
+        <label for="location">Location:</label>
+        <input id="location" type="text" name="location" value="{{ user.location }}"><br>
 
         <label for="languages">Languages:</label>
         <input type="text" id="languages" name="languages" value="{{ user.languages }}"><br>

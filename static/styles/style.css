@@ -9,3 +9,20 @@ body {
     margin: 10px 0;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+.suggestions {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    z-index: 1000;
+    background-color: white;
+    width: calc(100% - 22px); /* Adjust for padding */
+}
+.suggestions div {
+    padding: 10px;
+    cursor: pointer;
+}
+.suggestions div:hover {
+    background-color: #f0f0f0;
+}
