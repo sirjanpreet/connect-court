@@ -4,20 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feed - Court Connect</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .card {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 10px 0;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
 </head>
 <body>
     <div style="text-align: right;">
@@ -32,9 +19,11 @@
 
     <h2>Events</h2>
     <a href="{{ url_for('create_event') }}">Create Event</a>
+    <a href="{{ url_for('my_events') }}">My Events</a>
+    <a href="{{ url_for('registered_events') }}">Registered Events</a>
     <div id="events-container">
         {% for event_data in events %}
-            <div class="card">
+            <div class="event-card">
                 <h2>{{ event_data.event.title }}</h2>
                 <p><strong>Organized by:</strong> {{ event_data.event.organizer_id }}</p>
                 <p><strong>Sport:</strong> {{ event_data.event.sport }}</p>
@@ -45,7 +34,7 @@
                 <p><strong>Venue:</strong> {{ event_data.event.venue }}</p>
                 <p><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.max_capacity }}</p>
                 
-                {% if event_data.is_signed_up %}  <!-- Change here -->
+                {% if event_data.is_signed_up %}
                     <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="POST">
                         <button type="submit">Unregister</button>
                     </form>

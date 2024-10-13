@@ -8,3 +8,4 @@ TODO:
 - Visually pleasing design
 - Search function in feed
 - Sort/filter function in feed
+- Upcoming vs past events

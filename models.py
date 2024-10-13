@@ -37,7 +37,7 @@ class Event(db.Model):
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False) 
     organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    signups = db.relationship('EventSignup', backref='event', lazy=True)
+    signups = db.relationship('EventSignup', cascade='all, delete-orphan', backref='event', lazy=True)
 
     def get_signups_usernames(self):
         return [signup.user_id for signup in self.signups]

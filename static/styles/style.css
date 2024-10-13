@@ -1,0 +1,11 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+.event-card {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
