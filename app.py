@@ -318,7 +318,7 @@ def profile():
         flash('Profile updated successfully!')
         return redirect(url_for('profile'))
 
-    return render_template('profile.html', user=user, states=states)
+    return render_template('profile.html', user=user, states=states, api_key = GOOGLE_API_KEY)
 
 
 @app.route('/create_event', methods=['GET', 'POST'])
@@ -366,7 +366,7 @@ def create_event():
         flash('Event created successfully!')
         return redirect(url_for('feed'))
 
-    return render_template('create_event.html')
+    return render_template('create_event.html', api_key = GOOGLE_API_KEY)
 
 @app.route('/signup_event/<int:event_id>', methods=['POST'])
 def signup_event(event_id):
@@ -733,7 +733,7 @@ def edit_event(event_id):
         flash('Event updated successfully!')
         return redirect(url_for('my_events'))
 
-    return render_template('edit_event.html', event=event)
+    return render_template('edit_event.html', event=event, api_key = GOOGLE_API_KEY)
 
 @app.route('/registered_events')
 def registered_events():
