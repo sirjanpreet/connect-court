@@ -18,7 +18,12 @@ migrate = Migrate(app, db)
 
 HUGGINGFACE_API_TOKEN = "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"
 
-generator = pipeline('text-generation', model='gpt2', framework = 'pt')
+generator = pipeline(
+    'text-generation',
+    model='gpt2',
+    framework='pt',
+    pad_token_id=50256  # GPT-2's eos_token_id
+)
 
 # Ensure upload folder exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -482,46 +487,67 @@ def suggest_message():
 
     friend = User.query.get(friend_id)
 
-    # Get the response type from the request (default to 'friendly')
-    response_type = request.json.get('type', 'friendly')
+    if not friend:
+        return jsonify({"error": "Friend not found."}), 404
 
-    # Friendly response: Based on user profiles and interests
-    if response_type == 'friendly':
-        prompt = f"""
-        Suggest a friendly message for {current_user.name} to send to {friend.name}. 
-        {current_user.name} is interested in {current_user.sports}, and {friend.name} enjoys {friend.sports}.
-        Be friendly and suggest a sports-related topic for conversation.
-        """
-        # Generate a message using GPT-2, with truncation enabled
-        result = generator(prompt, max_length=500, truncation=True)
-        suggestion = result[0]['generated_text'].strip()
+    # Fetch the last 10 messages between the two users
+    chat_history = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
+        ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
+    ).order_by(ChatMessage.timestamp.desc()).limit(10).all()
 
-    # Intelligent response: Based on recent chat history
-    elif response_type == 'intelligent':
-        # Fetch the last 10 messages between the two users
-        chat_history = ChatMessage.query.filter(
-            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
-            ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
-        ).order_by(ChatMessage.timestamp.desc()).limit(10).all()
+    # Reverse chat history to have the oldest message first
+    chat_history = chat_history[::-1]
 
-        # Reverse chat history to have the oldest message first
-        chat_history = chat_history[::-1]
+    # Format the chat history for the prompt
+    chat_history_text = "\n".join(
+        [f"{msg.sender.name}: {msg.message}" for msg in chat_history]
+    )
 
-        # Format the chat history for the prompt
-        chat_history_text = "\n".join(
-            [f"{msg.sender.name}: {msg.message}" for msg in chat_history]
+    # Construct the prompt with user profiles and chat history
+    prompt = f"""
+    The following is a conversation between {current_user.name} and {friend.name}.
+    {current_user.name}'s Profile:
+    - Sports: {current_user.sports or 'N/A'}
+    - Bio: {current_user.bio or 'N/A'}
+    - Interests: {current_user.interests or 'N/A'}
+    - Location: {current_user.location_city}, {current_user.location_state or 'N/A'}
+    - Languages: {current_user.languages or 'N/A'}
+    - School/Work: {current_user.school_work or 'N/A'}
+
+    {friend.name}'s Profile:
+    - Sports: {friend.sports or 'N/A'}
+    - Bio: {friend.bio or 'N/A'}
+    - Interests: {friend.interests or 'N/A'}
+    - Location: {friend.location_city}, {friend.location_state or 'N/A'}
+    - Languages: {friend.languages or 'N/A'}
+    - School/Work: {friend.school_work or 'N/A'}
+
+    Based on the above profiles and the chat history below, generate a relevant and engaging message for {current_user.name} to send to {friend.name} about meeting up to play some sports.
+
+    Chat History:
+    {chat_history_text}
+
+    {current_user.name}:
+    """
+
+    try:
+        # Generate a message using GPT-2 with max_new_tokens and return only the generated text
+        result = generator(
+            prompt,
+            max_new_tokens=50,       # Number of tokens to generate
+            return_full_text=False,  # Return only the generated text
+            truncation=True
         )
-
-        prompt = f"""
-        The following is a conversation between {current_user.name} and {friend.name}.
-        Generate an intelligent response for {current_user.name} based on the chat history:
-        {chat_history_text}
-        """
-        # Generate an intelligent response using GPT-2, with truncation enabled
-        result = generator(prompt, max_length=500, truncation=True)
         suggestion = result[0]['generated_text'].strip()
 
-    return jsonify({"suggestion": suggestion}), 200
+        return jsonify({"suggestion": suggestion}), 200
+
+    except Exception as e:
+        # Log the exception (optional)
+        app.logger.error(f"Error generating message: {e}")
+        return jsonify({"error": "Failed to generate a suggestion."}), 500
+
 
 
 if __name__ == '__main__':

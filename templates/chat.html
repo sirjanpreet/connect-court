@@ -65,14 +65,17 @@
 
         #message-input {
             display: flex;
+            flex-direction: column;
         }
 
         #message-input textarea {
-            flex: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             resize: none;
+            margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         #message-input button {
@@ -81,7 +84,6 @@
             border: none;
             padding: 10px 15px;
             border-radius: 5px;
-            margin-left: 10px;
             cursor: pointer;
         }
 
@@ -95,6 +97,39 @@
             font-size: 14px;
             color: #888;
         }
+
+        .back-button {
+            background-color: #f8f9fa;
+            color: #007bff;
+            border: 1px solid #007bff;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Style for the suggest message button */
+        #suggest-button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        #suggest-button:hover {
+            background-color: #218838;
+        }
     </style>
 
     <!-- Auto-scroll script -->
@@ -106,16 +141,13 @@
 
         // Function to request a suggested message
         function suggestMessage() {
-            // Get the selected response type
-            let responseType = document.querySelector('input[name="response_type"]:checked').value;
-
             fetch('{{ url_for("suggest_message") }}', {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    type: responseType  // Send the selected response type
+                    // No need to send 'type' as we're only generating an intelligent response
                 })
             })
             .then(response => response.json())
@@ -135,6 +167,9 @@
 <body>
 
 <div id="chat-container">
+    <!-- Back button -->
+    <a href="{{ url_for('friends') }}" class="back-button">Back to Friends</a>
+
     <h1>Chat with {{ friend.name }}</h1>
     <div id="chat-history">
         {# Initialize a namespace to keep track of the last message date #}
@@ -157,20 +192,14 @@
         {% endfor %}
     </div>
 
-    <!-- Chat input and suggestion area -->
+    <!-- Suggest Message Button -->
+    <button type="button" id="suggest-button" onclick="suggestMessage()">Suggest a Message</button>
+
+    <!-- Chat input and send button -->
     <form action="{{ url_for('chat') }}" method="POST" id="message-input">
         <textarea id="message-input-text" name="message" rows="2" placeholder="Type your message here..."></textarea>
         <button type="submit">Send</button>
     </form>
-
-    <!-- Add radio buttons to choose between friendly or intelligent response -->
-    <div>
-        <label><input type="radio" name="response_type" value="friendly" checked> Friendly Response</label>
-        <label><input type="radio" name="response_type" value="intelligent"> Intelligent Response</label>
-    </div>
-
-    <!-- Button to trigger message suggestion -->
-    <button type="button" onclick="suggestMessage()">Suggest a Message</button>
 </div>
 
 </body>
