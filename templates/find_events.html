@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find Events - Court Connect</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places"></script>
     
     <style>
         #map {
@@ -95,6 +95,26 @@
             alert(`Signed up for event ID: ${eventId}`);
         }
 
+        function getCoordinates(venue) {
+            const apiKey = '{{ api_key }}'; // Replace with your Google Maps API Key
+            const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(venue)}&key=${apiKey}`;
+
+            return fetch(geocodeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK') {
+                        const location = data.results[0].geometry.location;
+                        return { lat: location.lat, lng: location.lng };
+                    } else {
+                        console.error('Geocoding failed:', data.status);
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching coordinates:', error);
+                    return null;
+                });
+        }
         window.onload = initMap;
     </script>
 </body>
