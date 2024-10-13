@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Events - Court Connect</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
+    
+    <style>
+        #map {
+            height: 500px; /* Set the height of the map */
+            width: 100%;
+        }
+        /* Additional styles for the info window */
+        .event-details {
+            display: none;
+            position: absolute;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Find Events Near You</h1>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+    <div class="event-details" id="event-details"></div>
+
+    <script>
+        let map;
+    
+        function initMap() {
+            const userLocation = { lat: {{ user_lat }}, lng: {{ user_long }} };
+
+            // Create a map centered at the user's location
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: userLocation,
+            });
+
+            // Fetch events and place markers
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(events => {
+                    events.forEach(event => {
+                        console.log(`Event: ${event.title}, Lat: ${event.latitude}, Long: ${event.longitude}`);
+                        
+                        // Use the latitude and longitude directly if they exist
+                        const position = { lat: event.latitude, lng: event.longitude };
+                        
+                        const marker = new google.maps.Marker({
+                            position: position,
+                            map: map,
+                            title: event.title,
+                        });
+
+                        // Add click event to marker
+                        marker.addListener('click', () => {
+                            showEventDetails(event);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching events:', error);
+                });
+        }
+
+
+        function showEventDetails(event) {
+            const detailsDiv = document.getElementById('event-details');
+            detailsDiv.innerHTML = `
+                <strong>${event.title}</strong><br>
+                <p>${event.description}</p>
+                <p><strong>Date:</strong> ${event.date}</p>
+                <p><strong>Location:</strong> ${event.venue}</p>
+                <button onclick="signupEvent(${event.id})">Sign Up</button>
+            `;
+            detailsDiv.style.display = 'block';
+            detailsDiv.style.left = `${event.clientX}px`; // Adjust position as needed
+            detailsDiv.style.top = `${event.clientY}px`; // Adjust position as needed
+        }
+
+        function signupEvent(eventId) {
+            // Implement your signup logic here, possibly sending a request to your backend
+            alert(`Signed up for event ID: ${eventId}`);
+        }
+
+        function getCoordinates(venue) {
+            const apiKey = 'AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg'; // Replace with your Google Maps API Key
+            const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(venue)}&key=${apiKey}`;
+
+            return fetch(geocodeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK') {
+                        const location = data.results[0].geometry.location;
+                        return { lat: location.lat, lng: location.lng };
+                    } else {
+                        console.error('Geocoding failed:', data.status);
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching coordinates:', error);
+                    return null;
+                });
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
