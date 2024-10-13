@@ -103,10 +103,27 @@
             color: #555;
         }
 
+        /* Button Grouping */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-group a {
+            margin: 0 10px;
+            min-width: 150px;
+        }
+
         /* Mobile responsive styling */
         @media (max-width: 768px) {
             .event-card {
                 max-width: 90%;
+            }
+
+            .btn-group a {
+                margin: 10px 0;
+                width: 100%;
             }
         }
     </style>
@@ -126,11 +143,13 @@
 
     <h2 class="text-center">Upcoming Events</h2>
 
-    <div class="text-center mb-4">
-        <a href="{{ url_for('create_event') }}" class="btn btn-primary mx-2">Create Event</a>
-        <a href="{{ url_for('my_events') }}" class="btn btn-secondary mx-2">My Events</a>
-        <a href="{{ url_for('registered_events') }}" class="btn btn-info mx-2">Registered Events</a>
+    <div class="text-center">
+        <a href="{{ url_for('find_events') }}" class="btn btn-success">Find Events</a>
+        <a href="{{ url_for('create_event') }}" class="btn btn-primary">Create Event</a>
+        <a href="{{ url_for('my_events') }}" class="btn btn-secondary">My Events</a>
+        <a href="{{ url_for('registered_events') }}" class="btn btn-info">Registered Events</a>
     </div>
+
 
     <div class="events-wrapper">
         {% for event_data in events %}

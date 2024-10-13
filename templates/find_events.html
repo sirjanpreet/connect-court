@@ -7,23 +7,104 @@
     <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places"></script>
     
     <style>
+        /* Map height */
         #map {
-            height: 500px; /* Set the height of the map */
+            height: 70vh; /* 70% of the viewport height */
             width: 100%;
+            border-radius: 10px;
         }
-        /* Additional styles for the info window */
+
+        /* Event details displayed at the bottom of the page */
         .event-details {
-            display: none;
-            position: absolute;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             background-color: white;
-            padding: 10px;
-            border: 1px solid #ccc;
+            border-top: 1px solid #ccc;
+            padding: 20px;
+            display: none;
             z-index: 1000;
+            box-shadow: 0px -4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .event-details-content {
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+        }
+
+        /* Improved event title styling */
+        #event-title {
+            font-size: 1.8rem;
+            color: #007bff;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* General text improvements */
+        #event-description, #event-date, #event-time, #event-venue, #event-signups {
+            font-size: 1rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .event-details p strong {
+            color: #555;
+        }
+
+        h1 {
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            font-size: 2.5rem;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        /* Back button */
+        .back-button {
+            display: inline-block;
+            margin: 10px 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Additional styling for a sleek, modern look */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .event-details h3 {
+            margin-top: 0;
+        }
+
+        .event-details p {
+            margin: 5px 0;
+        }
+
+        .event-details strong {
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <h1>Find Events Near You</h1>
+
+    <!-- Back to Feed Button -->
+    <a href="{{ url_for('feed') }}" class="back-button">Back to Feed</a>
 
     <!-- Hidden input fields for user location -->
     <input type="hidden" id="user_lat" value="{{ user_lat }}">
@@ -31,11 +112,23 @@
 
     <!-- Map Container -->
     <div id="map"></div>
-    <div class="event-details" id="event-details"></div>
+
+    <!-- Event details that show at the bottom -->
+    <div class="event-details" id="event-details">
+        <div class="event-details-content">
+            <h3 id="event-title"></h3>
+            <p id="event-description"></p>
+            <p><strong>Date:</strong> <span id="event-date"></span></p>
+            <p><strong>Time:</strong> <span id="event-time"></span></p>
+            <p><strong>Location:</strong> <span id="event-venue"></span></p>
+            <p><strong>Sign-ups:</strong> <span id="event-signups"></span></p>
+        </div>
+    </div>
 
     <script>
         let map;
-    
+        let selectedEvent = null;
+
         function initMap() {
             const userLocation = { 
                 lat: parseFloat(document.getElementById('user_lat').value), 
@@ -67,7 +160,14 @@
 
                         // Add click event to marker
                         marker.addListener('click', () => {
-                            showEventDetails(event);
+                            // If the clicked marker is already selected, deselect it
+                            if (selectedEvent === event) {
+                                hideEventDetails();
+                                selectedEvent = null;
+                            } else {
+                                showEventDetails(event);
+                                selectedEvent = event;
+                            }
                         });
                     });
                 })
@@ -77,44 +177,25 @@
         }
 
         function showEventDetails(event) {
-            const detailsDiv = document.getElementById('event-details');
-            detailsDiv.innerHTML = `
-                <strong>${event.title}</strong><br>
-                <p>${event.description}</p>
-                <p><strong>Date:</strong> ${event.date}</p>
-                <p><strong>Location:</strong> ${event.venue}</p>
-                <button onclick="signupEvent(${event.id})">Sign Up</button>
-            `;
-            detailsDiv.style.display = 'block';
-            detailsDiv.style.left = `${event.clientX}px`; // Adjust position as needed
-            detailsDiv.style.top = `${event.clientY}px`; // Adjust position as needed
+            selectedEvent = event; // Store selected event
+
+            // Populate the event details in the div
+            document.getElementById('event-title').textContent = event.title;
+            document.getElementById('event-description').textContent = event.description;
+            document.getElementById('event-date').textContent = event.date;
+            document.getElementById('event-time').textContent = event.start_time + ' - ' + event.end_time;
+            document.getElementById('event-venue').textContent = event.venue;
+            document.getElementById('event-signups').textContent = event.current_signup_count + ' / ' + event.max_capacity;
+
+            // Show the event details div
+            document.getElementById('event-details').style.display = 'block';
         }
 
-        function signupEvent(eventId) {
-            // Implement your signup logic here, possibly sending a request to your backend
-            alert(`Signed up for event ID: ${eventId}`);
+        function hideEventDetails() {
+            // Hide the event details div
+            document.getElementById('event-details').style.display = 'none';
         }
 
-        function getCoordinates(venue) {
-            const apiKey = '{{ api_key }}'; // Replace with your Google Maps API Key
-            const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(venue)}&key=${apiKey}`;
-
-            return fetch(geocodeUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK') {
-                        const location = data.results[0].geometry.location;
-                        return { lat: location.lat, lng: location.lng };
-                    } else {
-                        console.error('Geocoding failed:', data.status);
-                        return null;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching coordinates:', error);
-                    return null;
-                });
-        }
         window.onload = initMap;
     </script>
 </body>

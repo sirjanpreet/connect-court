@@ -771,32 +771,50 @@ def find_events():
 @app.route('/api/events', methods=['GET'])
 def get_events():
     # Fetch events from the database
-    events = Event.query.all()  # Modify this according to your database setup
+    events = Event.query.all()
 
     event_list = []
+
+    username = session.get('username')
+
+    if username:
+        user = User.query.filter_by(username=username).first()
+        user_id = user.id if user else None
+    else:
+        user_id = None
 
     for event in events:
         current_signup_count = len(event.signups)
 
         # Get coordinates using the venue
-        latitude, longitude = get_coordinates_with_venue(event.venue)
+        coordinates = get_coordinates_with_venue(event.venue)
+        latitude, longitude = coordinates['lat'], coordinates['lng']
+
+        is_owner = event.organizer_id == username
+
+        is_signed_up = False
+        if user_id:
+            is_signed_up = any(signup.user_id == user_id for signup in event.signups)
 
         event_list.append({
             'id': event.id,
             'title': event.title,
             'description': event.description,
+            'sport': event.sport,
             'venue': event.venue,
-            'date': event.date.isoformat(),
-            'start_time': event.start_time,
-            'end_time': event.end_time,
+            'date': event.date.strftime('%Y-%m-%d'),
+            'start_time': event.start_time.strftime('%H:%M'),
+            'end_time': event.end_time.strftime('%H:%M'),
             'current_signup_count': current_signup_count,
-
             'max_capacity': event.max_capacity,
             'latitude': latitude,
             'longitude': longitude,
+            'is_owner': is_owner,
+            'is_signed_up': is_signed_up
         })
 
     return jsonify(event_list)
+
 
 def get_coordinates_with_venue(venue):
     apiKey = GOOGLE_API_KEY
