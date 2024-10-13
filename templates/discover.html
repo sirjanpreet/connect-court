@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Users - Court Connect</title>
+    <style>
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            width: 300px;
+            margin: 15px;
+            padding: 15px;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .card h2 {
+            margin: 0 0 10px 0;
+        }
+        .card p {
+            margin: 5px 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to Feed Button -->
+    <a href="{{ url_for('feed') }}" style="display: inline-block; margin-bottom: 10px;">&larr; Back to Feed</a>
+
+    <h1>Discover Users</h1>
+    <div class="container">
+        {% for user in users %}
+            <div class="card">
+                {% if user.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ user.profile_picture) }}" alt="Profile Picture">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/default.jpg') }}" alt="Default Profile Picture">
+                {% endif %}
+                <h2>{{ user.name }}</h2>
+                <p><strong>Age:</strong> {{ user.age }}</p>
+                <p><strong>Bio:</strong> {{ user.bio }}</p>
+                <p><strong>Sports:</strong> {{ user.sports }}</p>
+                <p><strong>Interests:</strong> {{ user.interests }}</p>
+                <p><strong>Location:</strong> {{ user.location_city }}, {{ user.location_state }}</p>
+                <p><strong>Languages:</strong> {{ user.languages }}</p>
+                <p><strong>School/Work:</strong> {{ user.school_work }}</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

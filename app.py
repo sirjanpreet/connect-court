@@ -138,13 +138,15 @@ def profile():
         user.school_work = request.form.get('school_work')
 
         # Handle profile picture upload
-        if 'profile_picture' in request.files:
-            profile_picture = request.files['profile_picture']
-            if profile_picture.filename != '':
-                filename = secure_filename(profile_picture.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                profile_picture.save(filepath)
-                user.profile_picture = filepath
+    if 'profile_picture' in request.files:
+        profile_picture = request.files['profile_picture']
+        if profile_picture.filename != '':
+            filename = secure_filename(profile_picture.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            profile_picture.save(filepath)
+            # Save only the filename in the database (not the full path)
+            user.profile_picture = filename
+
 
         db.session.commit()
         flash('Profile updated successfully!')
@@ -252,6 +254,18 @@ def unregister_event(event_id):
             flash('You are not signed up for this event.')
     
     return redirect(url_for('feed'))
+
+@app.route('/discover')
+def discover():
+    if 'username' not in session:
+        flash('You must be logged in to view this page.')
+        return redirect(url_for('signin'))
+
+    # Get all users from the database
+    users = User.query.filter(User.username != session['username']).all()
+
+    return render_template('discover.html', users=users)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

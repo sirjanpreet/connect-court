@@ -64,7 +64,10 @@
 
     {% if user.profile_picture %}
         <h2>Your Profile Picture</h2>
-        <img src="{{ url_for('static', filename=user.profile_picture) }}" alt="Profile Picture" style="max-width: 150px;">
+        <!-- Prepend 'uploads/' to the filename -->
+        <img src="{{ url_for('static', filename='uploads/' ~ user.profile_picture) }}" alt="Profile Picture" style="max-width: 150px;">
     {% endif %}
+
+
 </body>
 </html>
