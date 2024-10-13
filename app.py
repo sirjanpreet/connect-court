@@ -41,6 +41,7 @@ with app.app_context():
     db.create_all()
 
 HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 generator = pipeline(
     'text-generation',
@@ -744,6 +745,11 @@ def registered_events():
         })
     return render_template('registered_events.html', events=events_data, user=user)
 
+from flask import render_template
+
+@app.route('/find-events')
+def find_events():
+    return render_template('find_events.html', api_key=GOOGLE_API_KEY)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find Events - Court Connect</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places"></script>
     
     <style>
         #map {
@@ -89,7 +89,7 @@
         }
 
         function getCoordinates(venue) {
-            const apiKey = 'AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg'; // Replace with your Google Maps API Key
+            const apiKey = '{{ api_key }}'; // Replace with your Google Maps API Key
             const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(venue)}&key=${apiKey}`;
 
             return fetch(geocodeUrl)
