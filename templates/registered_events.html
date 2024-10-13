@@ -3,50 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registered Events</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+    <title>Registered Events - Court Connect</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div style="text-align: right;">
-        <p>Signed in as: {{ user.username }}</p>
-        <a href="{{ url_for('profile') }}">Edit Profile</a> |
-        <a href="{{ url_for('discover') }}">Discover Users</a>
-        <a href="{{ url_for('logout') }}">Sign Out</a>
-    </div>
-    <h1>Registered Events</h1>
-    <p>This is where you can see all the events you've signed up for</p>
-    <a href="{{ url_for('feed') }}">My Feed</a> |
-    <a href="{{ url_for('my_events') }}">My Events</a>
-    <a href="{{ url_for('create_event') }}">Create Event</a>
+<body class="bg-gray-100">
 
-    {% if events %}
-    <ul>
-        {% for event_data in events %}
-        <div class="event-card">
-            <li>
-                <h2>{{ event_data.event.title }}</h2>
-                <p><strong>Organized by:</strong> {{ event_data.event.organizer_id }}</p>
-                <p><strong>Sport:</strong> {{ event_data.event.sport }}</p>
-                <p><strong>Date:</strong> {{ event_data.event.date }}</p>
-                <p><strong>Time:</strong> {{ event_data.event.start_time.strftime('%H:%M') }} - {{ event_data.event.end_time.strftime('%H:%M') }}</p>
-                <p><strong>Location:</strong> {{ event_data.event.city }}, {{ event_data.event.state }}</p>
-                <p><strong>Description:</strong> {{ event_data.event.description }}</p>
-                <p><strong>Venue:</strong> {{ event_data.event.venue }}</p>
-                <p><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.event.max_capacity }}</p>
-
-                {% if event_data.event.organizer_id == user.username %}
-                    <p>You are the organizer of this event.</p>
-                {% else %}
-                    <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="post">
-                        <button type="submit" class="btn btn-danger">Unregister</button>
-                    </form>
-                {% endif %}
-            </li>
+    <div class="container mx-auto py-8">
+        <!-- Header Section -->
+        <div class="flex justify-end mb-6 text-sm text-gray-600">
+            <p>Signed in as: <span class="font-bold">{{ user.username }}</span></p>
+            <a href="{{ url_for('profile') }}" class="ml-4 text-blue-500 hover:underline">Edit Profile</a> |
+            <a href="{{ url_for('discover') }}" class="ml-4 text-blue-500 hover:underline">Discover Users</a> |
+            <a href="{{ url_for('logout') }}" class="ml-4 text-red-500 hover:underline">Sign Out</a>
         </div>
-        {% endfor %}
-    </ul>
-    {% else %}
-        <p>You have no registered events.</p>
-    {% endif %}
+
+        <!-- Page Title -->
+        <h1 class="text-3xl font-bold mb-4 text-gray-800">Registered Events</h1>
+        <p class="mb-6 text-gray-600">This is where you can see all the events you've signed up for.</p>
+
+        <!-- Navigation Links -->
+        <div class="mb-8">
+            <a href="{{ url_for('feed') }}" class="text-blue-500 hover:underline mr-4">My Feed</a>
+            <a href="{{ url_for('my_events') }}" class="text-blue-500 hover:underline mr-4">My Events</a>
+            <a href="{{ url_for('create_event') }}" class="text-blue-500 hover:underline">Create Event</a>
+        </div>
+
+        <!-- Registered Events -->
+        {% if events %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for event_data in events %}
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-bold mb-2">{{ event_data.event.title }}</h2>
+                        <p class="text-gray-600"><strong>Organized by:</strong> {{ event_data.event.organizer_id }}</p>
+                        <p class="text-gray-600"><strong>Sport:</strong> {{ event_data.event.sport }}</p>
+                        <p class="text-gray-600"><strong>Date:</strong> {{ event_data.event.date }}</p>
+                        <p class="text-gray-600"><strong>Time:</strong> {{ event_data.event.start_time.strftime('%H:%M') }} - {{ event_data.event.end_time.strftime('%H:%M') }}</p>
+                        <p class="text-gray-600"><strong>Location:</strong> {{ event_data.event.city }}, {{ event_data.event.state }}</p>
+                        <p class="text-gray-600"><strong>Description:</strong> {{ event_data.event.description }}</p>
+                        <p class="text-gray-600"><strong>Venue:</strong> {{ event_data.event.venue }}</p>
+                        <p class="text-gray-600"><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.event.max_capacity }}</p>
+
+                        <!-- Conditional Messaging & Unregister Button -->
+                        {% if event_data.event.organizer_id == user.username %}
+                            <p class="text-green-500 mt-4">You are the organizer of this event.</p>
+                        {% else %}
+                            <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="post" class="mt-4">
+                                <button type="submit" class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-300">Unregister</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600">You have no registered events.</p>
+        {% endif %}
+    </div>
+
 </body>
 </html>

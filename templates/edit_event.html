@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Event</title>
+    <title>Edit Event - Court Connect</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
 
     <script>
-        let selectedPlaceName = ""; // Variable to store the name of the selected place
-    
         function initSearchBox() {
             const input = document.getElementById('venue');
             const searchBox = new google.maps.places.SearchBox(input);
-    
+            
             // Listen for the event fired when the user selects a prediction
             searchBox.addListener('places_changed', function() {
                 const places = searchBox.getPlaces();
@@ -42,19 +44,66 @@
         window.onload = initSearchBox;
     </script>
 </head>
-<body>
-    <h1>Edit Event: {{ event.title }}</h1>
-    <form method="post">
-        <input type="text" name="title" value="{{ event.title }}" required>
-        <textarea name="description">{{ event.description }}</textarea>
-        <input type="hidden" id="city" name="city">
-        <input type="hidden" id="state" name="state">
-        <input type="text" id="venue" name="venue" value="{{ event.venue }}" required>
-        <input type="date" name="date" value="{{ event.date }}" required>
-        <input type="time" name="start_time" value="{{ event.start_time.strftime('%H:%M') }}" required>
-        <input type="time" name="end_time" value="{{ event.end_time.strftime('%H:%M') }}" required>
-        <button type="submit">Update Event</button>
-    </form>
-    <a href="{{ url_for('my_events') }}">Cancel</a>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto py-8 px-4">
+        <!-- Title -->
+        <h1 class="text-3xl font-bold text-center mb-6">Edit Event: {{ event.title }}</h1>
+        
+        <!-- Event Edit Form -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <form method="post">
+                <!-- Event Title -->
+                <div class="mb-4">
+                    <label for="title" class="block text-sm font-medium text-gray-700">Event Title</label>
+                    <input type="text" id="title" name="title" value="{{ event.title }}" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>{{ event.description }}</textarea>
+                </div>
+
+                <!-- Hidden Inputs for City and State -->
+                <input type="hidden" id="city" name="city">
+                <input type="hidden" id="state" name="state">
+
+                <!-- Venue with Google Places -->
+                <div class="mb-4">
+                    <label for="venue" class="block text-sm font-medium text-gray-700">Venue</label>
+                    <input type="text" id="venue" name="venue" value="{{ event.venue }}" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+
+                <!-- Date -->
+                <div class="mb-4">
+                    <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" id="date" name="date" value="{{ event.date }}" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+
+                <!-- Start Time -->
+                <div class="mb-4">
+                    <label for="start_time" class="block text-sm font-medium text-gray-700">Start Time</label>
+                    <input type="time" id="start_time" name="start_time" value="{{ event.start_time.strftime('%H:%M') }}" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+
+                <!-- End Time -->
+                <div class="mb-4">
+                    <label for="end_time" class="block text-sm font-medium text-gray-700">End Time</label>
+                    <input type="time" id="end_time" name="end_time" value="{{ event.end_time.strftime('%H:%M') }}" class="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center">
+                    <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300">Update Event</button>
+                </div>
+            </form>
+
+            <!-- Cancel Button -->
+            <div class="flex justify-center mt-4">
+                <a href="{{ url_for('my_events') }}" class="text-red-500 hover:underline">Cancel</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -4,17 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Event - Court Connect</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
 
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Bootstrap CDN for extra components if needed -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Maps API for autocomplete -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
 
     <script>
-        let selectedPlaceName = ""; // Variable to store the name of the selected place
-    
         function initSearchBox() {
             const input = document.getElementById('venue');
             const searchBox = new google.maps.places.SearchBox(input);
-    
+
             // Listen for the event fired when the user selects a prediction
             searchBox.addListener('places_changed', function() {
                 const places = searchBox.getPlaces();
@@ -40,31 +44,83 @@
                 }
             });
         }
-    
+
         window.onload = initSearchBox;
     </script>
 </head>
-<body>
-    <h1>Create a New Event</h1>
+<body class="bg-gray-100">
 
-    <form method="POST" action="{{ url_for('create_event') }}">
-        <input type="text" name="title" placeholder="Event Title" required>
-        <input type="text" name="sport" placeholder="Sport" required>
-        <textarea name="description" placeholder="Description" required></textarea>
+    <div class="container mx-auto py-12">
+        <div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-8">
+            <h1 class="text-2xl font-bold text-center mb-6 text-gray-700">Create a New Event</h1>
 
-        <input type="hidden" id="city" name="city">
-        <input type="hidden" id="state" name="state">
-        <!-- Venue field with autocomplete -->
-        <input id="venue" type="text" name="venue" placeholder="Venue" required>
-        
-        <input type="number" name="max_capacity" placeholder="Max Capacity" required>
-        <input type="date" name="date" required>
-        <input type="time" name="start_time" required>
-        <input type="time" name="end_time" required>
-        <button type="submit" id="submit-button">Create Event</button>
-    </form>
+            <form method="POST" action="{{ url_for('create_event') }}">
+                <div class="mb-4">
+                    <label for="title" class="block text-gray-600">Event Title</label>
+                    <input type="text" name="title" placeholder="Event Title" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
 
-    <a href="{{ url_for('feed') }}">Back to Feed</a>
+                <div class="mb-4">
+                    <label for="sport" class="block text-gray-600">Sport</label>
+                    <input type="text" name="sport" placeholder="Sport" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="mb-4">
+                    <label for="description" class="block text-gray-600">Description</label>
+                    <textarea name="description" placeholder="Description" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <!-- Venue field with autocomplete -->
+                <div class="mb-4">
+                    <label for="venue" class="block text-gray-600">Venue</label>
+                    <input id="venue" type="text" name="venue" placeholder="Venue" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Hidden inputs for city and state -->
+                <input type="hidden" id="city" name="city">
+                <input type="hidden" id="state" name="state">
+
+                <div class="mb-4">
+                    <label for="max_capacity" class="block text-gray-600">Max Capacity</label>
+                    <input type="number" name="max_capacity" placeholder="Max Capacity" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="start_time" class="block text-gray-600">Start Time</label>
+                        <input type="time" name="start_time" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="end_time" class="block text-gray-600">End Time</label>
+                        <input type="time" name="end_time" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="date" class="block text-gray-600">Date</label>
+                    <input type="date" name="date" required 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <button type="submit" id="submit-button" 
+                    class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                    Create Event
+                </button>
+            </form>
+
+            <div class="text-center mt-6">
+                <a href="{{ url_for('feed') }}" class="text-blue-500 hover:underline">← Back to Feed</a>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

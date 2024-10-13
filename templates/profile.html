@@ -4,20 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile - Court Connect</title>
-<<<<<<< HEAD
+
     <!-- Include Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-=======
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCC5vscXiebMkOa8cY4-BtmIJgRXQieOGg&libraries=places"></script>
     <script>
-        let searchBox
+        let searchBox;
 
         function initSearchBox() {
             const input = document.getElementById('location');
             searchBox = new google.maps.places.SearchBox(input);
 
-            // Listener for when the user selects a prediction
             searchBox.addListener('places_changed', function() {
                 const places = searchBox.getPlaces();
                 if (places.length > 0) {
@@ -36,7 +34,6 @@
                         }
                     });
 
-                    // Set city and state as hidden inputs for form submission
                     document.getElementById('location_city').value = city;
                     document.getElementById('location_state').value = state;
                 }
@@ -45,7 +42,6 @@
 
         window.onload = initSearchBox;
     </script>
->>>>>>> 33c48771924feaefe4e81232d6150a533f090741
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
     <div class="max-w-4xl mx-auto mt-10 bg-white shadow-lg rounded-lg p-8">
@@ -100,39 +96,14 @@
                     <input type="text" id="interests" name="interests" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.interests }}">
                 </div>
 
-<<<<<<< HEAD
-                <!-- City -->
-                <div class="flex flex-col">
-                    <label for="location_city" class="text-gray-700 font-medium mb-1">City</label>
-                    <input type="text" id="location_city" name="location_city" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.location_city }}">
+                <!-- Location (Google Places) -->
+                <div class="flex flex-col col-span-2">
+                    <label for="location" class="text-gray-700 font-medium mb-1">Location</label>
+                    <input id="location" type="text" name="location" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" value="{{ user.location }}">
                 </div>
 
-                <!-- State -->
-                <div class="flex flex-col">
-                    <label for="location_state" class="text-gray-700 font-medium mb-1">State</label>
-                    <select id="location_state" name="location_state" class="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                        <option value="" disabled selected>Select your state</option>
-                        {% for code, name in states %}
-                            <option value="{{ code }}" {% if user.location_state == code %}selected{% endif %}>{{ name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-=======
-        <!-- <label for="location_city">City:</label> -->
-        <input type="hidden" id="location_city" name="location_city" value="{{ user.location_city }}">
-
-        <!-- <label for="location_state">State:</label> -->
-        <input type="hidden" id="location_state" name="location_state">
-        <!-- <select id="location_state" name="location_state">
-            <option value="" disabled selected>Select your state</option>
-            {% for code, name in states %}
-                <option value="{{ code }}" {% if user.location_state == code %}selected{% endif %}>{{ name }}</option>
-            {% endfor %}
-        </select><br> -->
-
-        <label for="location">Location:</label>
-        <input id="location" type="text" name="location" value="{{ user.location }}"><br>
->>>>>>> 33c48771924feaefe4e81232d6150a533f090741
+                <input type="hidden" id="location_city" name="location_city" value="{{ user.location_city }}">
+                <input type="hidden" id="location_state" name="location_state" value="{{ user.location_state }}">
 
                 <!-- Languages -->
                 <div class="flex flex-col">

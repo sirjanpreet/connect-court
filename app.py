@@ -29,8 +29,6 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads' 
 migrate = Migrate(app, db)
 
-HUGGINGFACE_API_TOKEN = "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"
-
 generator = pipeline(
     'text-generation',
     model='gpt2',
@@ -54,12 +52,12 @@ with app.app_context():
 HUGGINGFACE_API_TOKEN = os.getenv('HUGGINGFACE_API_TOKEN')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
-# generator = pipeline(
-#     'text-generation',
-#     model='gpt2',
-#     framework='pt',
-#     pad_token_id=50256  # GPT-2's eos_token_id
-# )
+generator = pipeline(
+    'text-generation',
+    model='gpt2',
+    framework='pt',
+    pad_token_id=50256  # GPT-2's eos_token_id
+)
 
 # States list to populate the dropdown in the profile form
 states = [
@@ -800,7 +798,6 @@ def get_events():
 
     return jsonify(event_list)
 
-
 def get_coordinates_with_venue(venue):
     apiKey = GOOGLE_API_KEY
     geocodeUrl = f'https://maps.googleapis.com/maps/api/geocode/json?address={venue}&key={apiKey}'
@@ -816,8 +813,6 @@ def get_coordinates_with_venue(venue):
     else:
         return {'lat': None, 'lng': None}  # Handle the case when geocoding fails
 
-    
-    return jsonify(event_list)
 
 from flask import render_template
 

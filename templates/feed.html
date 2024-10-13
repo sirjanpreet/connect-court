@@ -40,9 +40,10 @@
         }
 
         .events-wrapper {
-            display: flex;
-            justify-content: center;
             padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .event-card {
@@ -51,8 +52,7 @@
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
             padding: 20px;
             margin: 15px;
-            width: 100%;
-            max-width: 400px;
+            width: 300px;
             transition: transform 0.3s ease;
         }
 
@@ -82,6 +82,7 @@
             border-radius: 25px;
             font-size: 1rem;
             transition: background-color 0.3s ease;
+            width: 100%;
         }
 
         .event-btn:hover {
@@ -118,16 +119,20 @@
         <a href="{{ url_for('logout') }}">Sign Out</a>
     </div>
 
-<<<<<<< HEAD
     <div class="welcome-banner">
         <h1>Welcome to your feed, {{ username }}!</h1>
         <p>You are now signed in.</p>
-=======
-    <h2>Upcoming Events</h2>
-    <a href="{{ url_for('create_event') }}">Create Event</a>
-    <a href="{{ url_for('my_events') }}">My Events</a>
-    <a href="{{ url_for('registered_events') }}">Registered Events</a>
-    <div id="events-container">
+    </div>
+
+    <h2 class="text-center">Upcoming Events</h2>
+
+    <div class="text-center mb-4">
+        <a href="{{ url_for('create_event') }}" class="btn btn-primary mx-2">Create Event</a>
+        <a href="{{ url_for('my_events') }}" class="btn btn-secondary mx-2">My Events</a>
+        <a href="{{ url_for('registered_events') }}" class="btn btn-info mx-2">Registered Events</a>
+    </div>
+
+    <div class="events-wrapper">
         {% for event_data in events %}
             <div class="event-card">
                 <h2>{{ event_data.event.title }}</h2>
@@ -142,56 +147,17 @@
                 
                 {% if event_data.is_signed_up %}
                     <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="POST">
-                        <button type="submit">Unregister</button>
+                        <button type="submit" class="event-btn event-btn-unregister">Unregister</button>
                     </form>
                 {% else %}
                     <form action="{{ url_for('signup_event', event_id=event_data.event.id) }}" method="POST">
-                        <button type="submit">Sign Up</button>
+                        <button type="submit" class="event-btn">Sign Up</button>
                     </form>
                 {% endif %}
             </div>
         {% else %}
-            <p>No events found.</p>
+            <p class="no-events">No events found.</p>
         {% endfor %}
->>>>>>> 33c48771924feaefe4e81232d6150a533f090741
-    </div>
-
-    <div class="text-center mb-4">
-        <a href="{{ url_for('create_event') }}" class="btn btn-primary mx-2">Create Event</a>
-        <a href="{{ url_for('my_events') }}" class="btn btn-secondary mx-2">My Events</a>
-        <a href="{{ url_for('registered_events') }}" class="btn btn-info mx-2">Registered Events</a>
-    </div>
-
-    <div class="events-wrapper">
-        <div class="row justify-content-center">
-            {% for event_data in events %}
-                <div class="col-md-4">
-                    <div class="event-card">
-                        <h2>{{ event_data.event.title }}</h2>
-                        <p><strong>Organized by:</strong> {{ event_data.event.organizer_id }}</p>
-                        <p><strong>Sport:</strong> {{ event_data.event.sport }}</p>
-                        <p><strong>Date:</strong> {{ event_data.event.date }}</p>
-                        <p><strong>Time:</strong> {{ event_data.event.start_time }} - {{ event_data.event.end_time }}</p>
-                        <p><strong>Location:</strong> {{ event_data.event.city }}, {{ event_data.event.state }}</p>
-                        <p><strong>Description:</strong> {{ event_data.event.description }}</p>
-                        <p><strong>Venue:</strong> {{ event_data.event.venue }}</p>
-                        <p><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.max_capacity }}</p>
-                        
-                        {% if event_data.is_signed_up %}
-                            <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="POST">
-                                <button type="submit" class="event-btn event-btn-unregister">Unregister</button>
-                            </form>
-                        {% else %}
-                            <form action="{{ url_for('signup_event', event_id=event_data.event.id) }}" method="POST">
-                                <button type="submit" class="event-btn">Sign Up</button>
-                            </form>
-                        {% endif %}
-                    </div>
-                </div>
-            {% else %}
-                <p class="no-events">No events found.</p>
-            {% endfor %}
-        </div>
     </div>
 
     <!-- Bootstrap JS -->
