@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Friends - Court Connect</title>
+</head>
+<body>
+    <h1>Your Friends</h1>
+    <a href="{{ url_for('feed') }}" style="display: inline-block; margin-bottom: 10px;">&larr; Back to Feed</a>
+
+    {% for friend in friends %}
+        <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <h2>{{ friend.name }}</h2>
+            <p><strong>Phone:</strong> {{ friend.phone }}</p>
+            <p><strong>Email:</strong> {{ friend.email }}</p>
+            <p><strong>City:</strong> {{ friend.location_city }}, {{ friend.location_state }}</p>
+            <p><strong>Sports:</strong> {{ friend.sports }}</p>
+            <p><strong>Interests:</strong> {{ friend.interests }}</p>
+
+            <!-- Form to initiate chat -->
+            <form action="{{ url_for('start_chat') }}" method="POST">
+                <input type="hidden" name="friend_id" value="{{ friend.id }}"> <!-- Send friend ID -->
+                <button type="submit">Chat</button>
+            </form>
+        </div>
+    {% endfor %}
+</body>
+</html>

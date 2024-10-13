@@ -24,6 +24,7 @@
 
         <a href="{{ url_for('profile') }}">Edit Profile</a> |
         <a href="{{ url_for('discover') }}">Discover Users</a> |
+        <a href="{{ url_for('friends') }}">Friends</a> |  <!-- Friends button added -->
         <a href="{{ url_for('logout') }}">Sign Out</a>
     </div>
     
@@ -45,7 +46,7 @@
                 <p><strong>Venue:</strong> {{ event_data.event.venue }}</p>
                 <p><strong>Current signups:</strong> {{ event_data.current_signups }} / {{ event_data.max_capacity }}</p>
                 
-                {% if event_data.is_signed_up %}  <!-- Change here -->
+                {% if event_data.is_signed_up %}
                     <form action="{{ url_for('unregister_event', event_id=event_data.event.id) }}" method="POST">
                         <button type="submit">Unregister</button>
                     </form>
@@ -60,6 +61,5 @@
         {% endfor %}
     </div>
 
-    
 </body>
 </html>

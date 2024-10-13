@@ -4,7 +4,7 @@ import requests
 from werkzeug.utils import secure_filename
 import os
 from flask_migrate import Migrate
-from models import db, User, Event, EventSignup, Friendship
+from models import ChatMessage, db, User, Event, EventSignup, Friendship
 from datetime import datetime, time
 
 app = Flask(__name__)
@@ -398,6 +398,71 @@ def accept_request(from_user_id):
         flash('No friend request found.')
 
     return redirect(url_for('discover'))
+
+@app.route('/friends')
+def friends():
+    if 'username' not in session:
+        flash('You must be logged in to view this page.')
+        return redirect(url_for('signin'))
+
+    current_user = User.query.filter_by(username=session['username']).first()
+
+    # Query accepted friendships
+    friends_ids = [f.friend_id for f in current_user.sent_requests if f.status == 'accepted'] + \
+                  [f.user_id for f in current_user.received_requests if f.status == 'accepted']
+    
+    friends = User.query.filter(User.id.in_(friends_ids)).all()
+
+    return render_template('friends.html', friends=friends)
+
+
+@app.route('/chat', methods=['GET', 'POST'])
+def chat():
+    if 'username' not in session:
+        flash('You must be logged in to view this page.')
+        return redirect(url_for('signin'))
+
+    current_user = User.query.filter_by(username=session['username']).first()
+    
+    # Get the friend ID from the session
+    friend_id = session.get('friend_id')
+    if not friend_id:
+        flash('No chat initiated. Please start a chat from the Friends page.')
+        return redirect(url_for('friends'))
+
+    friend = User.query.get(friend_id)
+
+    if request.method == 'POST':
+        message_text = request.form.get('message')
+        if message_text:
+            new_message = ChatMessage(sender_id=current_user.id, recipient_id=friend_id, message=message_text)
+            db.session.add(new_message)
+            db.session.commit()
+            flash(f'Message sent to {friend.name}')
+    
+    # Retrieve the chat history between the current user and the friend
+    chat_history = ChatMessage.query.filter(
+        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == friend_id)) |
+        ((ChatMessage.sender_id == friend_id) & (ChatMessage.recipient_id == current_user.id))
+    ).order_by(ChatMessage.timestamp).all()
+
+    return render_template('chat.html', friend=friend, chat_history=chat_history, current_user=current_user)
+
+
+@app.route('/start_chat', methods=['POST'])
+def start_chat():
+    if 'username' not in session:
+        flash('You must be logged in to start a chat.')
+        return redirect(url_for('signin'))
+
+    friend_id = request.form.get('friend_id')
+    
+    if friend_id:
+        session['friend_id'] = friend_id  # Store the friend's ID in the session
+        return redirect(url_for('chat'))  # Redirect to the /chat route
+    
+    flash('Could not start chat. Please try again.')
+    return redirect(url_for('friends'))
 
 
 if __name__ == '__main__':
