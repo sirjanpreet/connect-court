@@ -23,3 +23,32 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    city = db.Column(db.String(100), nullable=False)
+    state = db.Column(db.String(50), nullable=False)
+    sport = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    venue = db.Column(db.String(150), nullable=False)
+    max_capacity = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False) 
+    organizer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    signups = db.relationship('EventSignup', backref='event', lazy=True)
+
+    def get_signups_usernames(self):
+        return [signup.user_id for signup in self.signups]
+
+    def __repr__(self):
+        return f'<Event {self.title} by {self.organizer_id}>'
+
+class EventSignup(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Signup {self.user.username} for {self.event.title}>'
