@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 from functools import wraps
+import numpy as np
+from sklearn.neighbors import KNeighborsRegressor
 from math import atan2, cos, radians, sin, sqrt
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
@@ -94,6 +96,83 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c  # Distance in kilometers
     return distance
 
+# Function to compute the sport similarity score (fraction of matching sports)
+def sport_similarity(user_sports, event_sports):
+    user_sports_set = set(user_sports.split(','))  # Split user sports by comma and create a set
+    event_sports_set = set(event_sports.split(','))  # Split event sports by comma and create a set
+    
+    # Find the intersection of sports between the user and the event
+    common_sports = user_sports_set.intersection(event_sports_set)
+    
+    # Calculate the similarity score as the fraction of common sports over total unique sports
+    total_sports = len(user_sports_set.union(event_sports_set))
+    similarity_score = len(common_sports) / total_sports if total_sports > 0 else 0
+    
+    return similarity_score
+
+# Function to check if the event organizer is a friend of the user
+def is_friend(user, organizer_id):
+    friend_relationship = Friendship.query.filter(
+        (Friendship.user_id == user.id) & (Friendship.friend_id == organizer_id) & (Friendship.status == 'accepted')
+    ).first()
+
+    reverse_relationship = Friendship.query.filter(
+        (Friendship.friend_id == user.id) & (Friendship.user_id == organizer_id) & (Friendship.status == 'accepted')
+    ).first()
+
+    # Return True if either relationship exists (mutual friendship)
+    return friend_relationship is not None or reverse_relationship is not None
+
+# Prepare the feature vector for each event
+def prepare_features(user, event, today):
+    # 1. Date proximity: days between today and event date
+    date_proximity = abs((event.date - today).days)
+
+    # 2. Location proximity: Haversine distance between user and event location
+    user_lat, user_lon = get_coordinates(user.location_city, user.location_state)
+    event_lat, event_lon = get_coordinates(event.city, event.state)
+    location_proximity = haversine(user_lat, user_lon, event_lat, event_lon)
+
+    # 3. Sports similarity (fraction of matching sports)
+    sport_match = sport_similarity(user.sports or '', event.sport or '')
+
+    # 4. Interest matching: binary (1 if there's any match, otherwise 0)
+    interest_match = 1 if any(interest in (event.description or '') for interest in (user.interests or '').split(',')) else 0
+
+    # 5. Friend event: binary (1 if the event is created by a friend, 0 otherwise)
+    friend_match = 1 if is_friend(user, event.organizer_id) else 0
+
+    # Return feature vector as a list
+    return [date_proximity, location_proximity, sport_match, interest_match, friend_match]
+
+# Fit the KNN model to rank the events
+def rank_events_knn(user, events):
+    today = datetime.today().date()
+
+    # Prepare feature vectors for all events
+    X = []
+    for event in events:
+        X.append(prepare_features(user, event, today))
+
+    # Convert feature vectors to numpy array
+    X = np.array(X)
+
+    # Fit a KNN model (n_neighbors should be the number of events since we want to rank all)
+    knn = KNeighborsRegressor(n_neighbors=len(events), metric='euclidean')
+
+    # Fit the KNN model using the feature vectors
+    knn.fit(X, np.arange(len(events)))  # We fit to indices since we don't have explicit labels
+
+    # Compute distances to each event (closeness) from the model
+    distances, indices = knn.kneighbors(X)
+
+    # The indices array provides the order in which events are ranked by closeness
+    # Sort events based on their ranking and return the ordered list
+    ranked_events = [events[i] for i in indices[0]]
+
+    return ranked_events
+
+
 ### ROUTES ###
 
 # Home route
@@ -150,17 +229,25 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('signin'))
 
-# Feed page route (for all users)
 @app.route('/feed', methods=['GET', 'POST'])
 def feed():
     if 'username' in session:
         username = session['username']
         user = User.query.filter_by(username=username).first()
 
+        # Fetch all events that are not created by the current user
         events = Event.query.filter(Event.organizer_id != username).all()
 
+        if len(events) > 3:
+            # Rank the events using the KNN model
+            ranked_events = rank_events_knn(user, events)
+        else:
+            # If there are 3 or fewer events, no need to run KNN
+            ranked_events = events
+
+        # Prepare the event data with additional information like signups and capacity
         event_data = []
-        for event in events:
+        for event in ranked_events:
             current_signups = len(event.signups)
             max_capacity = event.max_capacity
             # Check if the user is signed up for the event
@@ -177,6 +264,7 @@ def feed():
     else:
         flash('You are not logged in!')
         return redirect(url_for('signin'))
+
 
 
 # Profile route (view/edit profile)

@@ -51,6 +51,12 @@
     <div class="container">
         {% for user in users %}
             <div class="card">
+                <!-- Profile picture -->
+                {% if user.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="{{ user.name }}'s profile picture">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/default.png') }}" alt=""> <!-- Fallback if no picture -->
+                {% endif %}
                 <h2>{{ user.name }}</h2>
                 <p><strong>Location:</strong> {{ user.location_city }}, {{ user.location_state }}</p>
                 <p><strong>Bio:</strong> {{ user.bio }}</p>

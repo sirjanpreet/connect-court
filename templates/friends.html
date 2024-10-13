@@ -11,6 +11,12 @@
 
     {% for friend in friends %}
         <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <!-- Profile picture -->
+            {% if friend.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/' + friend.profile_picture) }}" alt="{{ friend.name }}'s profile picture" style="width: 150px; height: auto; border-radius: 10px;">
+            {% else %}
+                <img src="{{ url_for('static', filename='uploads/default.png') }}" alt="Default profile picture" style="width: 150px; height: auto; border-radius: 10px;"> <!-- Fallback if no picture -->
+            {% endif %}
             <h2>{{ friend.name }}</h2>
             <p><strong>Phone:</strong> {{ friend.phone }}</p>
             <p><strong>Email:</strong> {{ friend.email }}</p>
