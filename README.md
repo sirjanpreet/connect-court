@@ -16,7 +16,7 @@ Backend: Flask
 Frontend: JavaScript, HTML, and CSS
 Database: SQLite (or Firebase if updated)
 APIs: Google Maps API for geolocation and interactive map features
-Deployment: Hosted on [platform if applicable, e.g., Heroku]
+Deployment: Previously Hosten on Vercel
 
 
 # court-connect
