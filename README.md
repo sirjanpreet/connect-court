@@ -30,6 +30,8 @@ Future actions:
 - Add tags for events, rather than having users write things in.
 - Switch to React based front-end.
 
+Images
+
 
 ![Homepage](images/WelcomePage.png)
 
