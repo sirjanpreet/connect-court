@@ -37,6 +37,7 @@ Images
 ![Login](images/LoginPage.png)
 ![Edit](images/EfitPage.png)
 ![Feed](images/FeedPage.png)
+![Event](images/CreateeventPage.png)
 ![Discover](images/Discover.png)
 ![Friends](images/FriendsPage.png)
 ![Chat](images/ChatPage.png)
