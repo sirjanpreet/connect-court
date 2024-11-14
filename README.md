@@ -35,7 +35,7 @@ Images
 
 ![Homepage](images/WelcomePage.png)
 ![Login](images/LoginPage.png)
-![Edit](images/EfitPage.png)
+![Edit](images/EditPage.png)
 ![Feed](images/FeedPage.png)
 ![Event](images/CreateeventPage.png)
 ![Discover](images/Discover.png)
