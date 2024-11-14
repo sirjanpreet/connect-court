@@ -29,3 +29,7 @@ Future actions:
 - Immigrate to Firebase for authentication and our data base.
 - Add tags for events, rather than having users write things in.
 - Switch to React based front-end.
+
+
+![Homepage](images/Welcome Page.png)
+
