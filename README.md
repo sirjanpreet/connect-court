@@ -34,4 +34,10 @@ Images
 
 
 ![Homepage](images/WelcomePage.png)
+![Login](images/LoginPage.png)
+![Edit](images/EfitPage.png)
+![Feed](images/FeedPage.png)
+![Discover](images/Discover.png)
+![Friends](images/FriendsPage.png)
+![Chat](images/ChatPage.png)
 
