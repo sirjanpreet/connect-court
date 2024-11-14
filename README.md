@@ -31,5 +31,5 @@ Future actions:
 - Switch to React based front-end.
 
 
-![Homepage](images/Welcome Page.png)
+![Homepage](images/WelcomePage.png)
 
